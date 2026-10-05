@@ -49,6 +49,8 @@
   --tap-size: 48px;            /* أقل ارتفاع للأزرار عشان الإبهام */
   --max-width: 720px;
 
+  /* نعلن إن الموقع يدعم الوضعين بنفسه، عشان المتصفحات اللي تفرض وضع داكن
+     (مثل Samsung Internet) ما تعيد تلوين الصفحة. نفس القيمة في <meta name="color-scheme"> بكل صفحة */
   color-scheme: light dark;
 }
 
@@ -975,11 +977,14 @@ textarea {
 .cube-top    { transform: rotateX(90deg) translateZ(calc(var(--die-size) / 2)); }
 .cube-bottom { transform: rotateX(-90deg) translateZ(calc(var(--die-size) / 2)); }
 
-/* ألواح داخلية تسد الفراغ اللي تتركه الزوايا المدوّرة */
+/* ألواح داخلية تسد الفراغ اللي تتركه الزوايا المدوّرة.
+   ألوان النرد والعملة كلها قيم صريحة داخل تدرجات (مو لون مسطح ولا متغيرات تتبدل مع الثيم)،
+   لأن متصفحات الوضع الداكن الإجباري تغيّر الألوان المسطحة وتترك الصور والتدرجات غالباً.
+   التدرج هنا بنفس اللون في البداية والنهاية، فشكله مطابق للون المسطح */
 .cube-core {
   position: absolute;
   inset: 1px;
-  background: #e4ddcc;
+  background: linear-gradient(#e4ddcc, #e4ddcc);
   pointer-events: none;
 }
 .cube-core-1 { transform: rotateX(90deg); }
@@ -992,7 +997,7 @@ textarea {
   border-radius: 50%;
 }
 .pip.on {
-  background: #1c2321;
+  background: radial-gradient(#1c2321, #1c2321);
   box-shadow: inset 0 2px 2px rgba(0, 0, 0, 0.5);
 }
 
@@ -1053,10 +1058,15 @@ textarea {
   font-size: 1.9rem;
   font-weight: 900;
   color: #4a3500;
-  background: radial-gradient(circle at 35% 30%, #ffd860, var(--color-secondary) 60%, #c98b00);
+  /* ذهبي بتدرج، وحافة أغمق (#c98b00) */
+  background: radial-gradient(circle at 35% 30%, #ffd860, #f2a900 60%, #c98b00);
   box-shadow: inset 0 0 0 8px rgba(255, 255, 255, 0.35), inset 0 0 0 12px rgba(74, 53, 0, 0.2);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
+}
+/* في الوضع الداكن الذهبي أفتح شوي (نفس قيمة --color-secondary الداكنة، بس مكتوبة صريحة) */
+@media (prefers-color-scheme: dark) {
+  .coin-face { background: radial-gradient(circle at 35% 30%, #ffd860, #f2b632 60%, #c98b00); }
 }
 .coin-back { transform: rotateX(180deg); }
 
