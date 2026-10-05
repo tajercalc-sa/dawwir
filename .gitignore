@@ -1,0 +1,29 @@
+# ملفات نظام التشغيل
+.DS_Store
+Thumbs.db
+desktop.ini
+ehthumbs.db
+
+# إعدادات المحررات
+.vscode/
+.idea/
+*.swp
+*~
+
+# Node (لو أضفت أدوات build لاحقاً)
+node_modules/
+npm-debug.log*
+package-lock.json.bak
+
+# متغيرات بيئة وأسرار
+.env
+.env.*
+
+# سجلات وملفات مؤقتة
+*.log
+*.tmp
+.cache/
+
+# تقارير أدوات الفحص (Lighthouse وغيرها)
+lighthouse-*.json
+lighthouse-*.html

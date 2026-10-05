@@ -1,0 +1,1169 @@
+/* =========================================================
+   دوّر — ملف التنسيق المشترك لكل الصفحات
+   الترتيب: الخط ← المتغيرات ← الأساسيات ← الهيكل ← المكونات ← مساحات الإعلانات
+   التصميم mobile-first: القواعد الأساسية للجوال، والـ media queries للشاشات الأكبر
+   ========================================================= */
+
+/* ---------- 1) الخط المحلي (Cairo — رخصة OFL) ---------- */
+/* خط variable واحد يغطي كل الأوزان من 200 إلى 1000 */
+@font-face {
+  font-family: "Cairo";
+  src: url("../fonts/cairo-arabic.woff2") format("woff2");
+  font-weight: 200 1000;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC;
+}
+@font-face {
+  font-family: "Cairo";
+  src: url("../fonts/cairo-latin.woff2") format("woff2");
+  font-weight: 200 1000;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* ---------- 2) المتغيرات: 3 ألوان أساسية + درجات النص ---------- */
+:root {
+  /* الألوان الثلاثة */
+  --color-primary: #0e7c66;    /* أساسي: أخضر مزرق */
+  --color-secondary: #f2a900;  /* ثانوي: كهرماني */
+  --color-bg: #faf8f3;         /* خلفية فاتحة */
+
+  /* درجات مشتقة للنص والحدود (محايدة، مو ألوان إضافية) */
+  --color-text: #1c2321;
+  --color-muted: #5b6662;
+  --color-surface: #ffffff;
+  --color-border: rgba(28, 35, 33, 0.12);
+  --color-on-primary: #ffffff;
+
+  /* المسافات والأحجام */
+  --space-1: 0.5rem;
+  --space-2: 1rem;
+  --space-3: 1.5rem;
+  --space-4: 2.5rem;
+  --radius: 14px;
+  --tap-size: 48px;            /* أقل ارتفاع للأزرار عشان الإبهام */
+  --max-width: 720px;
+
+  color-scheme: light dark;
+}
+
+/* الوضع الداكن: يتبع إعداد الجهاز تلقائياً */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-primary: #3cc2a5;
+    --color-secondary: #f2b632;
+    --color-bg: #121615;
+
+    --color-text: #e8ecea;
+    --color-muted: #a3aeaa;
+    --color-surface: #1b201f;
+    --color-border: rgba(232, 236, 234, 0.14);
+    --color-on-primary: #0b1210;
+  }
+}
+
+/* ---------- 3) الأساسيات (reset خفيف) ---------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: "Cairo", system-ui, -apple-system, "Segoe UI", Tahoma, sans-serif;
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  color: var(--color-text);
+  background: var(--color-bg);
+}
+
+h1, h2, h3 {
+  line-height: 1.3;
+  margin: 0 0 var(--space-2);
+}
+h1 { font-size: 1.6rem; font-weight: 800; }
+h2 { font-size: 1.3rem; font-weight: 700; }
+
+p { margin: 0 0 var(--space-2); }
+
+a { color: var(--color-primary); }
+
+img, svg, canvas { max-width: 100%; display: block; }
+
+/* إطار واضح عند التنقل بالكيبورد */
+:focus-visible {
+  outline: 3px solid var(--color-secondary);
+  outline-offset: 2px;
+}
+
+/* الحاوية الوسطية لكل الأقسام */
+.container {
+  width: 100%;
+  max-width: var(--max-width);
+  margin-inline: auto;
+  padding-inline: var(--space-2);
+}
+
+/* نص مخفي بصرياً لكن يقرؤه قارئ الشاشة */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---------- 4) الـ header ---------- */
+.site-header {
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.site-header .container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding-block: var(--space-1);
+}
+
+.logo {
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: var(--color-primary);
+  text-decoration: none;
+  line-height: var(--tap-size);
+}
+
+/* قائمة الأدوات: صف أفقي يتمرر بالإصبع على الجوال بدل قائمة منسدلة (بدون JS) */
+.site-nav ul {
+  display: flex;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0 0 4px;
+  list-style: none;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.site-nav ul::-webkit-scrollbar { display: none; }
+
+.site-nav a {
+  display: flex;
+  align-items: center;
+  min-height: var(--tap-size);
+  padding-inline: var(--space-2);
+  border-radius: 999px;
+  white-space: nowrap;
+  font-weight: 600;
+  color: var(--color-text);
+  text-decoration: none;
+  background: var(--color-bg);
+}
+
+.site-nav a[aria-current="page"] {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+/* ---------- 5) المحتوى الرئيسي ---------- */
+main {
+  flex: 1;
+  padding-block: var(--space-3);
+}
+
+/* منطقة الأداة: أول شي يشوفه الزائر */
+.tool {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-3) var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.tool h1 {
+  font-size: 1.4rem;
+}
+
+/* المحتوى النصي تحت الأداة (شرح، أسئلة شائعة...) */
+.content {
+  margin-bottom: var(--space-3);
+}
+.content p { color: var(--color-muted); }
+
+/* شبكة بطاقات الأدوات في الرئيسية */
+.tool-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-2);
+  margin: 0 0 var(--space-3);
+  padding: 0;
+  list-style: none;
+}
+
+.tool-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 120px;
+  padding: var(--space-2);
+  text-align: center;
+  font-weight: 700;
+  color: var(--color-text);
+  text-decoration: none;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+.tool-card:hover { border-color: var(--color-primary); }
+
+.tool-card .icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+/* ---------- 6) الأزرار والحقول ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  min-height: var(--tap-size);
+  padding: 0 var(--space-3);
+  font: inherit;
+  font-weight: 700;
+  border: 0;
+  border-radius: var(--radius);
+  cursor: pointer;
+  text-decoration: none;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  -webkit-tap-highlight-color: transparent;
+}
+.btn:active { transform: scale(0.98); }
+
+.btn-secondary {
+  background: var(--color-secondary);
+  color: #1c2321;
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--color-primary);
+  border: 2px solid var(--color-primary);
+}
+
+/* زر بعرض كامل، مريح على الجوال */
+.btn-block { width: 100%; }
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* أزرار صغيرة دائرية للقوائم الجاهزة والفلاتر */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap-size);
+  padding-inline: var(--space-2);
+  font: inherit;
+  font-weight: 600;
+  color: var(--color-text);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.chip:disabled { opacity: 0.5; cursor: not-allowed; }
+
+input,
+textarea,
+select {
+  width: 100%;
+  min-height: var(--tap-size);
+  padding: 0.6rem var(--space-2);
+  font: inherit;
+  color: var(--color-text);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+textarea { min-height: 140px; resize: vertical; }
+
+/* رسالة تنبيه داخل الأداة */
+.notice {
+  margin: var(--space-2) 0 0;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius);
+  border-inline-start: 4px solid var(--color-secondary);
+  background: rgba(242, 169, 0, 0.14);
+  font-size: 0.95rem;
+}
+
+/* رسالة صغيرة تطلع تحت الشاشة (toast) */
+.toast {
+  position: fixed;
+  inset-inline: var(--space-2);
+  bottom: var(--space-2);
+  z-index: 20;
+  max-width: 420px;
+  margin-inline: auto;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius);
+  text-align: center;
+  font-weight: 600;
+  color: var(--color-bg);
+  background: var(--color-text);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.2s, transform 0.2s;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; transform: none; }
+
+/* ---------- 7) عجلة الأسماء ---------- */
+
+/* المساحة مربعة ومحجوزة مسبقاً بـ aspect-ratio، فما يصير layout shift */
+.wheel-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  aspect-ratio: 1;
+  margin: 0 auto var(--space-2);
+}
+
+.wheel-wrap canvas {
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+/* المؤشر: مثلث فوق العجلة */
+.wheel-pointer {
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  z-index: 1;
+  width: 0;
+  height: 0;
+  transform: translateX(-50%);
+  border-inline: 15px solid transparent;
+  border-top: 28px solid var(--color-text);
+}
+
+.wheel-controls {
+  display: flex;
+  gap: var(--space-1);
+  max-width: 440px;
+  margin-inline: auto;
+}
+
+.btn-spin {
+  flex: 1;
+  min-height: 56px;
+  font-size: 1.3rem;
+}
+
+.btn-icon {
+  flex: 0 0 56px;
+  min-height: 56px;
+  padding: 0;
+  font-size: 1.4rem;
+}
+
+/* رأس مربع النص: العنوان يمين والعداد يسار */
+.field-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-1);
+  margin: var(--space-3) 0 var(--space-1);
+}
+.field-head label { font-weight: 700; }
+
+.count { font-size: 0.9rem; color: var(--color-muted); direction: ltr; }
+.count.over { color: #c0392b; font-weight: 700; }
+
+.presets {
+  margin-top: var(--space-2);
+}
+.presets-title {
+  margin: 0 0 var(--space-1);
+  font-size: 0.95rem;
+  color: var(--color-muted);
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.tool-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-1);
+  margin-top: var(--space-2);
+}
+/* زرين جنب بعض على الجوال: نقلل الحشو عشان النص ما ينكسر لسطرين */
+.tool-actions .btn { padding-inline: var(--space-1); }
+
+/* نافذة النتيجة */
+.result-dialog {
+  width: min(100% - 2rem, 420px);
+  padding: var(--space-3);
+  border: 0;
+  border-radius: var(--radius);
+  text-align: center;
+  color: var(--color-text);
+  background: var(--color-surface);
+}
+.result-dialog::backdrop { background: rgba(0, 0, 0, 0.55); }
+
+.result-label {
+  margin: 0;
+  color: var(--color-muted);
+  font-weight: 600;
+}
+
+.result-name {
+  margin: var(--space-1) 0 var(--space-3);
+  font-size: clamp(1.6rem, 7vw, 2.4rem);
+  font-weight: 900;
+  line-height: 1.4;
+  color: var(--color-primary);
+  overflow-wrap: anywhere; /* الأسماء الطويلة تنكسر بدل ما تطلع برا النافذة */
+}
+
+.dialog-actions {
+  display: grid;
+  gap: var(--space-1);
+}
+
+/* زر "رجّع القائمة الأصلية" في العجلات الجاهزة */
+.reset-list-btn { margin-top: var(--space-2); }
+
+/* روابط العجلات الجاهزة: بطاقة فيها أيقونة وعنوان ووصف قصير */
+.wheel-links {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0 0 var(--space-2);
+  padding: 0;
+  list-style: none;
+}
+.wheel-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 64px;
+  padding: var(--space-1) var(--space-2);
+  color: var(--color-text);
+  text-decoration: none;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+.wheel-link:hover { border-color: var(--color-primary); }
+.wheel-link .icon { flex: none; font-size: 1.8rem; line-height: 1; }
+.wheel-link strong { display: block; font-weight: 800; }
+.wheel-link small {
+  display: block;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--color-muted);
+}
+.content .wheel-link small { color: var(--color-muted); }
+.more-link { font-weight: 700; }
+
+/* ---------- 8) اختيار فائز السحب ---------- */
+
+/* كل سطر في مربع النص ياخذ اتجاهه حسب لغته (اليوزرات الإنجليزية تظهر صح) */
+.bidi-lines { unicode-bidi: plaintext; }
+
+.field-head-first { margin-top: 0; }
+
+.options-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+.field label {
+  display: block;
+  margin-bottom: 4px;
+  font-weight: 700;
+}
+
+/* مربع اختيار كبير يسهل الضغط عليه */
+.check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: var(--tap-size);
+  margin-top: var(--space-1);
+  font-weight: 600;
+  cursor: pointer;
+}
+.check input {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  accent-color: var(--color-primary);
+}
+
+/* قسم ينفتح وينقفل (استبعاد أسماء، سجل السحوبات) */
+.disclosure summary {
+  display: flex;
+  align-items: center;
+  min-height: var(--tap-size);
+  font-weight: 700;
+  color: var(--color-primary);
+  cursor: pointer;
+}
+.disclosure[open] summary { margin-bottom: var(--space-1); }
+
+.draw-summary {
+  margin: var(--space-2) 0 0;
+  font-weight: 600;
+  color: var(--color-muted);
+}
+.draw-summary:empty { display: none; }
+
+.draw-btn { margin-top: var(--space-2); }
+
+.fair-note {
+  margin: var(--space-1) 0 0;
+  font-size: 0.85rem;
+  text-align: center;
+  color: var(--color-muted);
+}
+
+/* العرض التشويقي: الأسماء تتقلب هنا */
+.draw-stage {
+  margin-top: var(--space-3);
+  padding: var(--space-3) var(--space-2);
+  text-align: center;
+  border: 2px dashed var(--color-secondary);
+  border-radius: var(--radius);
+  background: var(--color-bg);
+}
+.stage-label { margin: 0; color: var(--color-muted); }
+.stage-name {
+  min-height: 1.5em;
+  margin: 0;
+  font-size: clamp(1.5rem, 7vw, 2.2rem);
+  font-weight: 900;
+  color: var(--color-primary);
+  overflow-wrap: anywhere;
+}
+
+/* بطاقة النتيجة */
+.result-card {
+  margin-top: var(--space-3);
+  padding: var(--space-3) var(--space-2);
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius);
+  background: var(--color-bg);
+}
+.result-card:focus { outline: none; }
+.result-card h3 {
+  margin: var(--space-2) 0 var(--space-1);
+  font-size: 1.05rem;
+  color: var(--color-muted);
+}
+
+.rank-list {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.rank-list li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  font-weight: 800;
+  font-size: 1.3rem;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.rank-list bdi { min-width: 0; }
+.rank {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  font-size: 0.95rem;
+  color: #1c2321;
+  background: var(--color-secondary);
+}
+.alternates-list li { font-size: 1rem; font-weight: 600; }
+.alternates-list .rank { background: var(--color-border); color: var(--color-text); }
+
+.draw-meta {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px var(--space-2);
+  margin: var(--space-2) 0 0;
+  font-size: 0.95rem;
+}
+.draw-meta dt { color: var(--color-muted); }
+.draw-meta dd { margin: 0; font-weight: 600; }
+
+.redraw-btn { margin-top: var(--space-1); }
+
+/* سجل السحوبات */
+.history { margin-top: var(--space-2); }
+.history-list {
+  margin: 0 0 var(--space-2);
+  padding: 0;
+  list-style: none;
+  font-size: 0.9rem;
+}
+.history-list li {
+  display: grid;
+  padding: var(--space-1) 0;
+  border-bottom: 1px solid var(--color-border);
+  overflow-wrap: anywhere;
+}
+.history-time { color: var(--color-muted); font-size: 0.85rem; }
+
+/* قوائم الشرح تحت الأداة */
+.content ol { padding-inline-start: 1.25rem; margin: 0 0 var(--space-2); }
+.content li { margin-bottom: var(--space-1); color: var(--color-muted); }
+
+/* ---------- 9) مكونات مشتركة للأدوات الصغيرة ---------- */
+
+/* مجموعة اختيارات (radio) شكلها أزرار جنب بعض */
+.segmented {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.segmented legend {
+  width: 100%;
+  margin-bottom: var(--space-1);
+  padding: 0;
+  font-weight: 700;
+}
+.segmented label {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 48px;
+}
+/* نخفي دائرة الـ radio الأصلية ونخلي الـ span هو الزر */
+.segmented input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.segmented span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--tap-size);
+  padding-inline: var(--space-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  font-weight: 700;
+  line-height: 1.3;
+  text-align: center;
+  background: var(--color-bg);
+}
+/* لما تكون 6 اختيارات: 3×2 على الجوال، وصف واحد على الشاشات الأوسع */
+.segmented-6 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+@media (min-width: 480px) {
+  .segmented-6 { grid-template-columns: repeat(6, 1fr); }
+}
+.segmented input:checked + span {
+  color: var(--color-on-primary);
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+.segmented input:focus-visible + span {
+  outline: 3px solid var(--color-secondary);
+  outline-offset: 2px;
+}
+
+.tool-section { margin-top: var(--space-2); }
+
+/* سطر وصف صغير (مثل خطة تقسيم الفرق) */
+.hint {
+  margin: var(--space-2) 0 0;
+  font-weight: 600;
+  color: var(--color-muted);
+}
+.hint:empty { display: none; }
+
+/* ---------- 10) تقسيم الفرق ---------- */
+
+.teams-grid {
+  display: grid;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.team-card {
+  border: 1px solid var(--color-border);
+  border-top: 6px solid var(--team-color, var(--color-primary));
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  overflow: hidden;
+}
+
+.team-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2) 0;
+}
+
+/* اسم الفريق: حقل نص شكله عنوان، يبان إنه قابل للتعديل لما تلمسه */
+.team-name {
+  flex: 1;
+  min-width: 0;
+  padding: 0.25rem 0.5rem;
+  font-size: 1.15rem;
+  font-weight: 800;
+  background: transparent;
+  border: 1px dashed transparent;
+}
+.team-name:hover,
+.team-name:focus { border-color: var(--color-border); background: var(--color-bg); }
+
+.team-size {
+  flex: none;
+  display: grid;
+  place-items: center;
+  min-width: 32px;
+  height: 32px;
+  padding-inline: 6px;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 800;
+  background: var(--color-bg);
+}
+
+.team-members {
+  margin: 0;
+  padding: var(--space-1) var(--space-2) var(--space-2);
+  list-style: none;
+}
+.team-members li {
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--color-border);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.team-members li:last-child { border-bottom: 0; }
+
+/* ---------- 11) النرد ---------- */
+
+/* المساحة محجوزة لصفين نرد عشان ما تتحرك الصفحة */
+.dice-tray {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-content: center;
+  gap: var(--space-2);
+  min-height: 200px;
+  margin: var(--space-2) 0;
+  cursor: pointer;
+}
+
+/* كل نرد له حجم واحد نغيّره من مكان واحد (أصغر شوي على الشاشات الضيقة)
+   مسافة أفقية أكبر + padding عشان المكعب وهو يدور ويقفز ما يغطي اللي جنبه أو العنوان */
+.dice-tray {
+  --die-size: 64px;
+  gap: var(--space-2) var(--space-3);
+  padding-block: var(--space-1);
+}
+@media (min-width: 380px) {
+  .dice-tray { --die-size: 76px; }
+}
+
+.die {
+  position: relative;
+  width: var(--die-size);
+  height: var(--die-size);
+}
+
+/* --- باقي الأنواع (d4, d8, d10, d12, d20): مجسّم مرسوم على canvas من dice3d.js ---
+   الـ canvas أكبر من مربع النرد ومتوسّط فوقه (المقاس والمكان يحطهم الـ JS)
+   عشان أطراف الشكل وهو يدور ما تنقص */
+.die-canvas {
+  position: absolute;
+  max-width: none; /* نلغي max-width: 100% العامة، وإلا الـ canvas ينضغط بالعرض بس ويتمطّط الشكل */
+  pointer-events: none;
+}
+
+/* --- نرد الـ 6 أوجه: مكعب 3D بـ CSS فقط --- */
+.die-3d { perspective: 600px; }
+
+/* ظل بيضاوي تحت المكعب (يصغر لما النرد يقفز) */
+.die-shadow {
+  position: absolute;
+  inset-inline: 8%;
+  bottom: -12px;
+  height: 16px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(0, 0, 0, 0.3), transparent);
+}
+
+.die-hop,
+.cube {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+.rolling .cube,
+.rolling .die-hop,
+.rolling .die-shadow { will-change: transform; }
+
+/* كل وجه: شبكة 3×3 للنقاط، بزوايا مدوّرة وتظليل خفيف على الأطراف */
+.cube-face {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template: repeat(3, 1fr) / repeat(3, 1fr);
+  padding: 12%;
+  border-radius: 18%;
+  background: radial-gradient(circle at 50% 45%, #fffdf8 55%, #ece6d8);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08), inset 0 -3px 6px rgba(0, 0, 0, 0.08);
+  backface-visibility: hidden;
+}
+.cube-front  { transform: translateZ(calc(var(--die-size) / 2)); }
+.cube-back   { transform: rotateY(180deg) translateZ(calc(var(--die-size) / 2)); }
+.cube-right  { transform: rotateY(90deg) translateZ(calc(var(--die-size) / 2)); }
+.cube-left   { transform: rotateY(-90deg) translateZ(calc(var(--die-size) / 2)); }
+.cube-top    { transform: rotateX(90deg) translateZ(calc(var(--die-size) / 2)); }
+.cube-bottom { transform: rotateX(-90deg) translateZ(calc(var(--die-size) / 2)); }
+
+/* ألواح داخلية تسد الفراغ اللي تتركه الزوايا المدوّرة */
+.cube-core {
+  position: absolute;
+  inset: 1px;
+  background: #e4ddcc;
+  pointer-events: none;
+}
+.cube-core-1 { transform: rotateX(90deg); }
+.cube-core-2 { transform: rotateY(90deg); }
+
+.pip {
+  width: 72%;
+  aspect-ratio: 1;
+  place-self: center;
+  border-radius: 50%;
+}
+.pip.on {
+  background: #1c2321;
+  box-shadow: inset 0 2px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* زر الرمي + زر الكتم: نفس صف العجلة بس بعرض كامل مثل زر الرمي قبل */
+.dice-controls,
+.coin-controls { max-width: none; }
+
+/* المجموع */
+.total-box {
+  margin: 0 0 var(--space-2);
+  text-align: center;
+}
+.total-label { margin: 0; color: var(--color-muted); font-weight: 600; }
+.total-value {
+  margin: 0;
+  font-size: 2.6rem;
+  font-weight: 900;
+  line-height: 1.2;
+  color: var(--color-primary);
+}
+.total-detail {
+  min-height: 1.7em;
+  margin: 0;
+  color: var(--color-muted);
+  /* RTL مثل النرد: أول رقم على اليمين يقابل أول نرد على اليمين */
+}
+
+/* ---------- 12) رمي العملة ---------- */
+
+.coin-stage {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-3) 0 var(--space-1);
+  perspective: 800px;
+}
+
+.coin-wrap { cursor: pointer; }
+.coin-wrap.tossing { animation: coin-toss 1.1s ease-out; }
+@keyframes coin-toss {
+  0%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-50px); }
+}
+
+/* العملة: وجهين فوق بعض، والخلفي مقلوب 180° */
+.coin {
+  position: relative;
+  width: 170px;
+  height: 170px;
+  transform-style: preserve-3d;
+  transition: transform 1.1s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.coin-face {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-size: 1.9rem;
+  font-weight: 900;
+  color: #4a3500;
+  background: radial-gradient(circle at 35% 30%, #ffd860, var(--color-secondary) 60%, #c98b00);
+  box-shadow: inset 0 0 0 8px rgba(255, 255, 255, 0.35), inset 0 0 0 12px rgba(74, 53, 0, 0.2);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.coin-back { transform: rotateX(180deg); }
+
+.coin-result {
+  margin: var(--space-1) 0 var(--space-2);
+  text-align: center;
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: var(--color-primary);
+}
+
+/* العدّاد */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-1);
+  margin: var(--space-2) 0 0;
+  text-align: center;
+}
+.stats div {
+  padding: var(--space-1);
+  border-radius: var(--radius);
+  background: var(--color-bg);
+}
+.stats dt { font-size: 0.85rem; color: var(--color-muted); }
+.stats dd { margin: 0; font-weight: 800; }
+
+.recent { margin-top: var(--space-2); }
+.recent-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.recent-list li {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+.recent-heads { color: #4a3500; background: var(--color-secondary); }
+.recent-tails { color: var(--color-on-primary); background: var(--color-primary); }
+
+/* ---------- 13) الرقم العشوائي ---------- */
+
+.range-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+
+.number-result {
+  margin-top: var(--space-3);
+  padding: var(--space-2);
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius);
+  background: var(--color-bg);
+  text-align: center;
+}
+.big-number {
+  margin: 0;
+  font-size: clamp(3rem, 16vw, 4.5rem);
+  font-weight: 900;
+  line-height: 1.2;
+  color: var(--color-primary);
+  overflow-wrap: anywhere;
+  direction: ltr;
+}
+.number-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-1);
+  max-height: 320px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+.number-chips li {
+  min-width: 48px;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius);
+  font-weight: 800;
+  background: var(--color-surface);
+  direction: ltr;
+}
+.number-meta { margin: var(--space-1) 0; color: var(--color-muted); font-size: 0.9rem; }
+
+/* ---------- 14) المحتوى النصي والصفحات الثابتة ---------- */
+
+/* الأسئلة الشائعة تحت الأدوات */
+.faq h3 {
+  margin: var(--space-2) 0 4px;
+  font-size: 1.05rem;
+  color: var(--color-text);
+}
+.faq p { margin-bottom: 0; }
+.content h3 { font-size: 1.05rem; margin-top: var(--space-2); }
+.content ul { padding-inline-start: 1.25rem; margin: 0 0 var(--space-2); }
+.content .wheel-links { padding: 0; }
+
+/* الصفحات الثابتة (من نحن، الخصوصية، اتصل بنا): نص أوضح من الشرح الرمادي */
+.static-page p,
+.static-page li { color: var(--color-text); }
+.static-page h2 { margin-top: var(--space-3); }
+.updated { font-size: 0.9rem; color: var(--color-muted) !important; }
+.contact-email {
+  font-size: 1.3rem;
+  font-weight: 800;
+  direction: ltr;
+  text-align: center;
+}
+
+/* صفحة 404 */
+.not-found { text-align: center; }
+.not-found .wheel-links { text-align: start; margin-top: var(--space-2); }
+.nf-code {
+  margin: 0;
+  font-size: 4rem;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--color-secondary);
+}
+
+/* ---------- 15) الـ footer ---------- */
+.site-footer {
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+  padding-block: var(--space-3);
+  font-size: 0.95rem;
+  color: var(--color-muted);
+}
+
+.site-footer ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-2);
+  margin: 0 0 var(--space-1);
+  padding: 0;
+  list-style: none;
+}
+
+.site-footer a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap-size);
+  color: var(--color-muted);
+}
+
+.site-footer p { margin: 0; }
+
+/* ---------- 16) مساحات الإعلانات ---------- */
+/* المساحة محجوزة مسبقاً بارتفاع ثابت، فلما ينزل الإعلان ما تتحرك الصفحة (بدون layout shift) */
+.ad-slot {
+  width: 100%;
+  min-height: 280px;          /* مقاس إعلان الجوال الشائع 300×250 + هامش */
+  margin: 0 auto var(--space-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: var(--color-border);
+}
+
+/* المساحة مخفية ما دامت فاضية (قبل كود AdSense).
+   بعد إضافة كود AdSense داخل الـ div ما تصير :empty، فترجع تظهر تلقائياً بنفس الارتفاع المحجوز فوق.
+   انتبه: لازم الـ div يكون فاضي تماماً (بدون مسافات أو أسطر) عشان :empty يشتغل */
+.ad-slot:empty { display: none; }
+
+/* ---------- 17) الشاشات الأكبر (تابلت وكمبيوتر) ---------- */
+@media (min-width: 768px) {
+  h1 { font-size: 2rem; }
+
+  .site-header .container {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  /* على الكمبيوتر الروابط تنزل لسطر ثاني بدل التمرير (الماوس ما يقدر يسحب) */
+  .site-nav { flex: 1; }
+  .site-nav ul {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    padding-bottom: 0;
+  }
+
+  .teams-grid { grid-template-columns: repeat(2, 1fr); }
+  .wheel-links { grid-template-columns: repeat(2, 1fr); }
+
+  .tool { padding: var(--space-4); }
+
+  .tool-grid { grid-template-columns: repeat(4, 1fr); }
+
+  .ad-slot { min-height: 120px; } /* إعلان أفقي 728×90 + هامش */
+}
+
+/* احترام إعداد "تقليل الحركة" في الجهاز */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
