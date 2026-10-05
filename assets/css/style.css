@@ -4,6 +4,9 @@
    التصميم mobile-first: القواعد الأساسية للجوال، والـ media queries للشاشات الأكبر
    ========================================================= */
 
+/* نشيل الوميض الأزرق اللي يطلع على الجوال عند الضغط على أي عنصر */
+* { -webkit-tap-highlight-color: transparent; }
+
 /* ---------- 1) الخط المحلي (Cairo — رخصة OFL) ---------- */
 /* خط variable واحد يغطي كل الأوزان من 200 إلى 1000 */
 @font-face {
@@ -101,10 +104,34 @@ a { color: var(--color-primary); }
 
 img, svg, canvas { max-width: 100%; display: block; }
 
-/* إطار واضح عند التنقل بالكيبورد */
+/* الإطار يختفي عند الضغط بالماوس أو اللمس، ويبقى واضح عند التنقل بالكيبورد */
+:focus:not(:focus-visible) { outline: none; }
 :focus-visible {
-  outline: 3px solid var(--color-secondary);
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
+}
+
+/* العناصر القابلة للضغط: بدون تأخير الضغط المزدوج، وبدون تحديد النص عند الضغط المتكرر */
+button,
+a,
+.btn,
+canvas,
+summary,
+.check,
+.segmented label,
+.tool-card,
+.wheel-link,
+.dice-tray,
+.coin-wrap {
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+}
+/* الروابط داخل الفقرات والقوائم تبقى قابلة للتحديد والنسخ (مثل البريد في صفحة التواصل) */
+p a,
+li a {
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 /* الحاوية الوسطية لكل الأقسام */
