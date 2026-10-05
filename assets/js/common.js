@@ -123,6 +123,9 @@ function showToast(message) {
   toastTimer = setTimeout(() => toast.classList.remove("show"), 2500);
 }
 
+// من هذا العرض وفوق نعتبر الشاشة كمبيوتر (لازم يطابق قسم 900px في style.css)
+const DESKTOP_QUERY = window.matchMedia("(min-width: 900px)");
+
 /* ---------- 4) قائمة الأدوات على الجوال ---------- */
 // زر «الأدوات» يفتح ويقفل لوحة الروابط تحت الهيدر.
 // تتقفل بالضغط على الزر مرة ثانية، أو بالضغط خارجها، أو بزر Escape، أو لما يطلع التركيز منها
@@ -159,13 +162,60 @@ function initNavMenu() {
   });
 
   // لو كبرت الشاشة للكمبيوتر واللوحة مفتوحة، نقفلها عشان ما ترجع مفتوحة لما تصغر
-  const desktop = window.matchMedia("(min-width: 900px)");
-  desktop.addEventListener("change", (e) => {
+  DESKTOP_QUERY.addEventListener("change", (e) => {
     if (e.matches) setOpen(false);
   });
 }
 
-/* ---------- 5) تجهيز الصفحة ---------- */
+/* ---------- 5) نمو مربعات النص تلقائياً على الجوال ---------- */
+// المربع يكبر مع عدد الأسطر ويصغر لما تقل، بين min-height و max-height المكتوبين في style.css.
+// على الكمبيوتر نرجّعه لارتفاعه العادي (المستخدم يكبّره بالسحب)
+function autoGrow(textarea) {
+  if (DESKTOP_QUERY.matches) {
+    textarea.style.height = "";
+    textarea.style.overflowY = "";
+    return;
+  }
+  // المربع المخفي (مثلاً داخل <details> مقفل) ما له مقاس، نحسبه لما ينفتح
+  if (!textarea.getClientRects().length) return;
+
+  // نحفظ مكان التمرير، لأن تصغير المربع لحظياً ممكن يحرّك الصفحة
+  const scrollY = window.scrollY;
+  // نصغّره لأقل شي (الـ CSS يمنعه ينزل تحت min-height)، عشان scrollHeight يعطينا طول المحتوى الحقيقي
+  textarea.style.height = "0px";
+  const styles = getComputedStyle(textarea);
+  const borders = parseFloat(styles.borderTopWidth) + parseFloat(styles.borderBottomWidth);
+  const needed = textarea.scrollHeight + borders;
+  const max = parseFloat(styles.maxHeight);
+  textarea.style.height = `${needed}px`; // الـ CSS يوقفه عند max-height
+  // التمرير الداخلي يظهر بس لما المحتوى أطول من الحد الأقصى
+  textarea.style.overflowY = needed > max ? "auto" : "hidden";
+  if (window.scrollY !== scrollY) window.scrollTo(0, scrollY);
+}
+
+function initAutoGrow() {
+  const areas = document.querySelectorAll("textarea");
+  if (!areas.length) return;
+  const growAll = () => areas.forEach(autoGrow);
+
+  areas.forEach((textarea) => textarea.addEventListener("input", () => autoGrow(textarea)));
+  // مربع داخل <details> نحسبه لما ينفتح
+  document.querySelectorAll("details").forEach((d) => d.addEventListener("toggle", growAll));
+  // تغيّر العرض يغيّر التفاف الأسطر الطويلة، والتحويل بين جوال وكمبيوتر يغيّر القواعد
+  let frame;
+  window.addEventListener("resize", () => {
+    cancelAnimationFrame(frame);
+    frame = requestAnimationFrame(growAll);
+  });
+  DESKTOP_QUERY.addEventListener("change", growAll);
+  // زر الرجوع في المتصفح ممكن يرجّع نص قديم بدون حدث input
+  window.addEventListener("pageshow", growAll);
+  // بعد تحميل الخط يتغير عرض الحروف، فممكن يتغير التفاف الأسطر
+  if (document.fonts) document.fonts.ready.then(growAll);
+  growAll();
+}
+
+/* ---------- 6) تجهيز الصفحة ---------- */
 
 document.addEventListener("DOMContentLoaded", () => {
   // نحط سنة اليوم في الـ footer تلقائياً
@@ -173,4 +223,5 @@ document.addEventListener("DOMContentLoaded", () => {
   if (yearEl) yearEl.textContent = new Date().getFullYear();
 
   initNavMenu();
+  initAutoGrow();
 });

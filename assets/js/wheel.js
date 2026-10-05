@@ -417,6 +417,9 @@
     const all = parseNames(textarea.value);
     items = all.slice(0, MAX_OPTIONS);
 
+    // نعدّل ارتفاع المربع هنا عشان يشمل التغييرات البرمجية (قوائم جاهزة، مسح، حذف الفائز، رابط مشترك)
+    autoGrow(textarea);
+
     countEl.textContent = `${all.length} / ${MAX_OPTIONS}`;
     countEl.classList.toggle("over", all.length > MAX_OPTIONS);
 

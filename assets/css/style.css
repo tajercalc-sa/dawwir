@@ -387,7 +387,20 @@ select {
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
 }
-textarea { min-height: 140px; resize: vertical; }
+/* مربعات النص على الجوال: تبدأ بـ 5 أسطر وتكبر مع المحتوى لحد 9 أسطر، وبعدها تمرير داخلي.
+   النمو نفسه تسويه الدالة autoGrow في common.js (تقرأ min-height و max-height من هنا).
+   ارتفاع السطر = 1.7em (line-height)، ونضيف الـ padding فوق وتحت (0.6rem × 2) والحدود (1px × 2) */
+textarea {
+  --lines-min: 5;
+  --lines-max: 9;
+  height: calc(var(--lines-min) * 1.7em + 1.2rem + 2px);
+  min-height: calc(var(--lines-min) * 1.7em + 1.2rem + 2px);
+  max-height: calc(var(--lines-max) * 1.7em + 1.2rem + 2px);
+  overflow-y: auto;
+  resize: none;
+}
+/* مربع «استبعاد أسماء» في اختيار فائز: أصغر لأنه اختياري وقصير عادةً */
+#excluded { --lines-min: 3; --lines-max: 6; }
 
 /* رسالة تنبيه داخل الأداة */
 .notice {
@@ -1230,10 +1243,18 @@ textarea { min-height: 140px; resize: vertical; }
   .ad-slot { min-height: 120px; } /* إعلان أفقي 728×90 + هامش */
 }
 
-/* ---------- 18) الهيدر على الكمبيوتر (900px وأكبر) ---------- */
+/* ---------- 18) الكمبيوتر (900px وأكبر): الهيدر ومربعات النص ---------- */
 /* تحت 900px تبقى قائمة الجوال المنسدلة، عشان الروابط السبعة ما تضيق.
-   لو غيّرت الرقم هنا، غيّره كمان في initNavMenu داخل assets/js/common.js */
+   لو غيّرت الرقم هنا، غيّره كمان في DESKTOP_QUERY داخل assets/js/common.js */
 @media (min-width: 900px) {
+  /* مربعات النص: بدون نمو تلقائي، والمستخدم يكبّرها بنفسه بالسحب */
+  textarea {
+    height: auto;
+    min-height: 140px;
+    max-height: none;
+    resize: vertical;
+  }
+
   .site-header .container { padding-inline: var(--space-3); }
 
   .logo { font-size: 1.8rem; } /* حوالي 29px */
