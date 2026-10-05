@@ -387,20 +387,24 @@ select {
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
 }
-/* مربعات النص على الجوال: تبدأ بـ 5 أسطر وتكبر مع المحتوى لحد 9 أسطر، وبعدها تمرير داخلي.
+/* مربعات النص على الجوال: تبدأ بـ 5 أسطر وتكبر مع المحتوى لحد 5.5 سطر، وبعدها تمرير داخلي.
+   نص السطر الأخير يبان مقطوع، كإشارة إن فيه خيارات أكثر تحت.
    النمو نفسه تسويه الدالة autoGrow في common.js (تقرأ min-height و max-height من هنا).
-   ارتفاع السطر = 1.7em (line-height)، ونضيف الـ padding فوق وتحت (0.6rem × 2) والحدود (1px × 2) */
+   ارتفاع السطر = 1.7em (line-height)، والحدود 1px × 2.
+   الحد الأدنى: نضيف الـ padding فوق وتحت (0.6rem × 2).
+   الحد الأقصى: نضيف الـ padding العلوي بس (0.6rem)، لأن السفلي يتمرر مع النص،
+   ولو حسبناه كان السطر المقطوع بيظهر شبه كامل */
 textarea {
   --lines-min: 5;
-  --lines-max: 9;
+  --lines-max: 5.5;
   height: calc(var(--lines-min) * 1.7em + 1.2rem + 2px);
   min-height: calc(var(--lines-min) * 1.7em + 1.2rem + 2px);
-  max-height: calc(var(--lines-max) * 1.7em + 1.2rem + 2px);
+  max-height: calc(var(--lines-max) * 1.7em + 0.6rem + 2px);
   overflow-y: auto;
   resize: none;
 }
 /* مربع «استبعاد أسماء» في اختيار فائز: أصغر لأنه اختياري وقصير عادةً */
-#excluded { --lines-min: 3; --lines-max: 6; }
+#excluded { --lines-min: 3; --lines-max: 3.5; }
 
 /* رسالة تنبيه داخل الأداة */
 .notice {
@@ -1247,11 +1251,10 @@ textarea {
 /* تحت 900px تبقى قائمة الجوال المنسدلة، عشان الروابط السبعة ما تضيق.
    لو غيّرت الرقم هنا، غيّره كمان في DESKTOP_QUERY داخل assets/js/common.js */
 @media (min-width: 900px) {
-  /* مربعات النص: بدون نمو تلقائي، والمستخدم يكبّرها بنفسه بالسحب */
+  /* مربعات النص: بدون نمو تلقائي، والمستخدم يكبّرها بنفسه بالسحب (لحد نفس max-height حق الجوال) */
   textarea {
     height: auto;
     min-height: 140px;
-    max-height: none;
     resize: vertical;
   }
 
