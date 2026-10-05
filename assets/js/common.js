@@ -123,10 +123,54 @@ function showToast(message) {
   toastTimer = setTimeout(() => toast.classList.remove("show"), 2500);
 }
 
-/* ---------- 4) تجهيز الصفحة ---------- */
+/* ---------- 4) قائمة الأدوات على الجوال ---------- */
+// زر «الأدوات» يفتح ويقفل لوحة الروابط تحت الهيدر.
+// تتقفل بالضغط على الزر مرة ثانية، أو بالضغط خارجها، أو بزر Escape، أو لما يطلع التركيز منها
+function initNavMenu() {
+  const header = document.querySelector(".site-header");
+  const toggle = header && header.querySelector(".nav-toggle");
+  const nav = header && header.querySelector(".site-nav");
+  if (!toggle || !nav) return;
+
+  const isOpen = () => toggle.getAttribute("aria-expanded") === "true";
+  function setOpen(open) {
+    toggle.setAttribute("aria-expanded", String(open));
+    header.classList.toggle("nav-open", open);
+  }
+
+  toggle.addEventListener("click", () => setOpen(!isOpen()));
+
+  // الضغط في أي مكان خارج اللوحة والزر يقفلها
+  document.addEventListener("click", (e) => {
+    if (isOpen() && !nav.contains(e.target) && !toggle.contains(e.target)) setOpen(false);
+  });
+
+  // Escape يقفلها ويرجع التركيز للزر عشان مستخدم الكيبورد ما يضيع مكانه
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && isOpen()) {
+      setOpen(false);
+      toggle.focus();
+    }
+  });
+
+  // لو انتقل التركيز بـ Tab لعنصر خارج الهيدر، نقفل اللوحة
+  header.addEventListener("focusout", (e) => {
+    if (isOpen() && e.relatedTarget && !header.contains(e.relatedTarget)) setOpen(false);
+  });
+
+  // لو كبرت الشاشة للكمبيوتر واللوحة مفتوحة، نقفلها عشان ما ترجع مفتوحة لما تصغر
+  const desktop = window.matchMedia("(min-width: 768px)");
+  desktop.addEventListener("change", (e) => {
+    if (e.matches) setOpen(false);
+  });
+}
+
+/* ---------- 5) تجهيز الصفحة ---------- */
 
 document.addEventListener("DOMContentLoaded", () => {
   // نحط سنة اليوم في الـ footer تلقائياً
   const yearEl = document.querySelector("[data-year]");
   if (yearEl) yearEl.textContent = new Date().getFullYear();
+
+  initNavMenu();
 });
