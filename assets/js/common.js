@@ -159,7 +159,7 @@ function initNavMenu() {
   });
 
   // لو كبرت الشاشة للكمبيوتر واللوحة مفتوحة، نقفلها عشان ما ترجع مفتوحة لما تصغر
-  const desktop = window.matchMedia("(min-width: 768px)");
+  const desktop = window.matchMedia("(min-width: 900px)");
   desktop.addEventListener("change", (e) => {
     if (e.matches) setOpen(false);
   });

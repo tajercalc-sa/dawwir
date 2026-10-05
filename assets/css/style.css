@@ -160,8 +160,11 @@ li a {
   border-bottom: 1px solid var(--color-border);
 }
 
-/* على الجوال: صف واحد — الشعار في جهة، وزر «الأدوات» في الجهة المقابلة */
+/* صف واحد: الشعار في جهة، والقائمة (أو زر «الأدوات» على الجوال) في الجهة المقابلة.
+   عرض الهيدر مستقل عن عمود المحتوى (--max-width) عشان القائمة تاخذ راحتها على الكمبيوتر */
 .site-header .container {
+  max-width: 1100px;
+  min-height: 64px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1217,15 +1220,28 @@ textarea { min-height: 140px; resize: vertical; }
 @media (min-width: 768px) {
   h1 { font-size: 2rem; }
 
-  .site-header .container {
-    justify-content: flex-start;
-    gap: var(--space-2);
-  }
-  /* على الشاشات الكبيرة: الزر يختفي والقائمة الأفقية ترجع ظاهرة دائماً */
+  .teams-grid { grid-template-columns: repeat(2, 1fr); }
+  .wheel-links { grid-template-columns: repeat(2, 1fr); }
+
+  .tool { padding: var(--space-4); }
+
+  .tool-grid { grid-template-columns: repeat(4, 1fr); }
+
+  .ad-slot { min-height: 120px; } /* إعلان أفقي 728×90 + هامش */
+}
+
+/* ---------- 18) الهيدر على الكمبيوتر (900px وأكبر) ---------- */
+/* تحت 900px تبقى قائمة الجوال المنسدلة، عشان الروابط السبعة ما تضيق.
+   لو غيّرت الرقم هنا، غيّره كمان في initNavMenu داخل assets/js/common.js */
+@media (min-width: 900px) {
+  .site-header .container { padding-inline: var(--space-3); }
+
+  .logo { font-size: 1.8rem; } /* حوالي 29px */
+
+  /* الزر يختفي والقائمة الأفقية ترجع ظاهرة دائماً */
   .nav-toggle { display: none; }
   .site-nav {
     position: static;
-    flex: 1;
     padding: 0;
     background: none;
     border: 0;
@@ -1235,28 +1251,35 @@ textarea { min-height: 140px; resize: vertical; }
     visibility: visible;
     transition: none;
   }
-  /* الروابط تنزل لسطر ثاني لو ما كفّت المساحة */
+
+  /* الروابط في صف واحد دائماً */
   .site-nav ul {
     display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-end;
+    flex-wrap: nowrap;
+    gap: 4px;
     max-width: none;
     margin: 0;
   }
   .site-nav a {
-    padding-inline: var(--space-2);
+    min-height: 0;
+    padding: 8px 14px;
     border-radius: 999px;
+    font-size: 15px;
     white-space: nowrap;
+    color: var(--color-muted);
+    background: transparent;
   }
-
-  .teams-grid { grid-template-columns: repeat(2, 1fr); }
-  .wheel-links { grid-template-columns: repeat(2, 1fr); }
-
-  .tool { padding: var(--space-4); }
-
-  .tool-grid { grid-template-columns: repeat(4, 1fr); }
-
-  .ad-slot { min-height: 120px; } /* إعلان أفقي 728×90 + هامش */
+  .site-nav a:hover,
+  .site-nav a:focus-visible {
+    color: var(--color-text);
+    background: var(--color-bg);
+  }
+  /* الرابط النشط يبقى أخضر حتى مع hover */
+  .site-nav a[aria-current="page"],
+  .site-nav a[aria-current="page"]:hover {
+    color: var(--color-on-primary);
+    background: var(--color-primary);
+  }
 }
 
 /* احترام إعداد "تقليل الحركة" في الجهاز */
