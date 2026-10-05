@@ -124,13 +124,12 @@
 
         <div class="coin-stage">
           <div class="coin-wrap" id="coin-wrap" title="اضغط لقلب العملة">
-            <div class="coin" id="coin" aria-hidden="true">
-              <div class="coin-face coin-front">صورة</div>
-              <div class="coin-face coin-back">كتابة</div>
-            </div>
+            <canvas class="coin-canvas" id="coin" width="170" height="170" role="img" aria-label="عملة: صورة"></canvas>
           </div>
         </div>
-        <p class="coin-result" id="coin-result" aria-live="polite">—</p>
+        <p class="coin-result" id="coin-result">—</p>
+        <!-- يعلن النتيجة للقارئ الصوتي بعد ما توقف العملة -->
+        <p class="visually-hidden" id="coin-announce" aria-live="polite" aria-atomic="true"></p>
 
         <div class="wheel-controls coin-controls">
           <button type="button" class="btn btn-block btn-spin" id="flip-btn">اقلب العملة</button>

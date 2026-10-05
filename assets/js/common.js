@@ -76,7 +76,42 @@ function fitText(c, text, maxWidth) {
   return parts.slice(0, low).join("") + "…";
 }
 
-/* ---------- 3) النسخ والرسائل ---------- */
+/* ---------- 3) الحركة على canvas ---------- */
+
+// دالة تباطؤ مثل cubic-bezier في CSS، للحركات اللي نرسمها بأنفسنا (النرد والعملة)
+// ترجّع دالة تاخذ التقدّم في الوقت (0 إلى 1) وترجّع التقدّم في الحركة
+// الطريقة: نحل x(t) = الوقت بطريقة Newton ثم نرجّع y(t)
+function cubicBezier(x1, y1, x2, y2) {
+  const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx;
+  const cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
+  const curveX = (t) => ((ax * t + bx) * t + cx) * t;
+  const curveY = (t) => ((ay * t + by) * t + cy) * t;
+  const slopeX = (t) => (3 * ax * t + 2 * bx) * t + cx;
+  return (x) => {
+    if (x <= 0) return 0;
+    if (x >= 1) return 1;
+    let t = x;
+    for (let i = 0; i < 8; i++) {
+      const err = curveX(t) - x;
+      const s = slopeX(t);
+      if (Math.abs(err) < 1e-6 || Math.abs(s) < 1e-6) break;
+      t -= err / s;
+    }
+    // احتياط: لو Newton طلع برّا المدى نستخدم التنصيف
+    if (t < 0 || t > 1 || Math.abs(curveX(t) - x) > 1e-4) {
+      let lo = 0, hi = 1;
+      t = x;
+      for (let i = 0; i < 30; i++) {
+        if (curveX(t) < x) lo = t;
+        else hi = t;
+        t = (lo + hi) / 2;
+      }
+    }
+    return curveY(t);
+  };
+}
+
+/* ---------- 4) النسخ والرسائل ---------- */
 
 // ينسخ نص للحافظة. يرجّع true لو نجح
 // navigator.clipboard يشتغل بس على https، فعندنا طريقة احتياطية للتجربة المحلية على http
@@ -126,7 +161,7 @@ function showToast(message) {
 // من هذا العرض وفوق نعتبر الشاشة كمبيوتر (لازم يطابق قسم 900px في style.css)
 const DESKTOP_QUERY = window.matchMedia("(min-width: 900px)");
 
-/* ---------- 4) قائمة الأدوات على الجوال ---------- */
+/* ---------- 5) قائمة الأدوات على الجوال ---------- */
 // زر «الأدوات» يفتح ويقفل لوحة الروابط تحت الهيدر.
 // تتقفل بالضغط على الزر مرة ثانية، أو بالضغط خارجها، أو بزر Escape، أو لما يطلع التركيز منها
 function initNavMenu() {
@@ -167,7 +202,7 @@ function initNavMenu() {
   });
 }
 
-/* ---------- 5) نمو مربعات النص تلقائياً على الجوال ---------- */
+/* ---------- 6) نمو مربعات النص تلقائياً على الجوال ---------- */
 // المربع يكبر مع عدد الأسطر ويصغر لما تقل، بين min-height و max-height المكتوبين في style.css.
 // على الكمبيوتر نرجّعه لارتفاعه العادي (المستخدم يكبّره بالسحب)
 function autoGrow(textarea) {
@@ -215,7 +250,7 @@ function initAutoGrow() {
   growAll();
 }
 
-/* ---------- 6) تجهيز الصفحة ---------- */
+/* ---------- 7) تجهيز الصفحة ---------- */
 
 document.addEventListener("DOMContentLoaded", () => {
   // نحط سنة اليوم في الـ footer تلقائياً

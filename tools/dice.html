@@ -125,11 +125,13 @@
 
         <div class="dice-tray" id="dice-tray" title="اضغط للرمي"></div>
 
-        <div class="total-box" aria-live="polite" aria-atomic="true">
+        <div class="total-box">
           <p class="total-label">المجموع</p>
           <p class="total-value" id="dice-total">—</p>
           <p class="total-detail" id="dice-detail"></p>
         </div>
+        <!-- يعلن النتيجة للقارئ الصوتي بعد ما يوقف النرد -->
+        <p class="visually-hidden" id="dice-announce" aria-live="polite" aria-atomic="true"></p>
 
         <div class="wheel-controls dice-controls">
           <button type="button" class="btn btn-block btn-spin" id="roll-btn">ارمِ النرد</button>

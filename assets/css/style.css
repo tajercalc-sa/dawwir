@@ -926,7 +926,8 @@ textarea {
   height: var(--die-size);
 }
 
-/* --- باقي الأنواع (d4, d8, d10, d12, d20): مجسّم مرسوم على canvas من dice3d.js ---
+/* كل الأنواع (d4, d6, d8, d10, d12, d20): مجسّم مرسوم على canvas من dice3d.js
+   (canvas مو CSS، عشان متصفحات الوضع الليلي الإجباري ما تقلب ألوان النرد).
    الـ canvas أكبر من مربع النرد ومتوسّط فوقه (المقاس والمكان يحطهم الـ JS)
    عشان أطراف الشكل وهو يدور ما تنقص */
 .die-canvas {
@@ -935,10 +936,7 @@ textarea {
   pointer-events: none;
 }
 
-/* --- نرد الـ 6 أوجه: مكعب 3D بـ CSS فقط --- */
-.die-3d { perspective: 600px; }
-
-/* ظل بيضاوي تحت المكعب (يصغر لما النرد يقفز) */
+/* ظل بيضاوي تحت النرد (يصغر لما النرد يقفز) */
 .die-shadow {
   position: absolute;
   inset-inline: 8%;
@@ -948,58 +946,12 @@ textarea {
   background: radial-gradient(closest-side, rgba(0, 0, 0, 0.3), transparent);
 }
 
-.die-hop,
-.cube {
+.die-hop {
   position: absolute;
   inset: 0;
-  transform-style: preserve-3d;
 }
-.rolling .cube,
 .rolling .die-hop,
 .rolling .die-shadow { will-change: transform; }
-
-/* كل وجه: شبكة 3×3 للنقاط، بزوايا مدوّرة وتظليل خفيف على الأطراف */
-.cube-face {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  grid-template: repeat(3, 1fr) / repeat(3, 1fr);
-  padding: 12%;
-  border-radius: 18%;
-  background: radial-gradient(circle at 50% 45%, #fffdf8 55%, #ece6d8);
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08), inset 0 -3px 6px rgba(0, 0, 0, 0.08);
-  backface-visibility: hidden;
-}
-.cube-front  { transform: translateZ(calc(var(--die-size) / 2)); }
-.cube-back   { transform: rotateY(180deg) translateZ(calc(var(--die-size) / 2)); }
-.cube-right  { transform: rotateY(90deg) translateZ(calc(var(--die-size) / 2)); }
-.cube-left   { transform: rotateY(-90deg) translateZ(calc(var(--die-size) / 2)); }
-.cube-top    { transform: rotateX(90deg) translateZ(calc(var(--die-size) / 2)); }
-.cube-bottom { transform: rotateX(-90deg) translateZ(calc(var(--die-size) / 2)); }
-
-/* ألواح داخلية تسد الفراغ اللي تتركه الزوايا المدوّرة.
-   ألوان النرد والعملة كلها قيم صريحة داخل تدرجات (مو لون مسطح ولا متغيرات تتبدل مع الثيم)،
-   لأن متصفحات الوضع الداكن الإجباري تغيّر الألوان المسطحة وتترك الصور والتدرجات غالباً.
-   التدرج هنا بنفس اللون في البداية والنهاية، فشكله مطابق للون المسطح */
-.cube-core {
-  position: absolute;
-  inset: 1px;
-  background: linear-gradient(#e4ddcc, #e4ddcc);
-  pointer-events: none;
-}
-.cube-core-1 { transform: rotateX(90deg); }
-.cube-core-2 { transform: rotateY(90deg); }
-
-.pip {
-  width: 72%;
-  aspect-ratio: 1;
-  place-self: center;
-  border-radius: 50%;
-}
-.pip.on {
-  background: radial-gradient(#1c2321, #1c2321);
-  box-shadow: inset 0 2px 2px rgba(0, 0, 0, 0.5);
-}
 
 /* زر الرمي + زر الكتم: نفس صف العجلة بس بعرض كامل مثل زر الرمي قبل */
 .dice-controls,
@@ -1031,7 +983,6 @@ textarea {
   display: flex;
   justify-content: center;
   padding: var(--space-3) 0 var(--space-1);
-  perspective: 800px;
 }
 
 .coin-wrap { cursor: pointer; }
@@ -1041,34 +992,12 @@ textarea {
   40% { transform: translateY(-50px); }
 }
 
-/* العملة: وجهين فوق بعض، والخلفي مقلوب 180° */
-.coin {
-  position: relative;
+/* العملة مرسومة على canvas من coin.js (الألوان والقلب كلها هناك)،
+   عشان متصفحات الوضع الليلي الإجباري ما تقلب لونها الذهبي */
+.coin-canvas {
   width: 170px;
   height: 170px;
-  transform-style: preserve-3d;
-  transition: transform 1.1s cubic-bezier(0.2, 0.7, 0.2, 1);
 }
-.coin-face {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  font-size: 1.9rem;
-  font-weight: 900;
-  color: #4a3500;
-  /* ذهبي بتدرج، وحافة أغمق (#c98b00) */
-  background: radial-gradient(circle at 35% 30%, #ffd860, #f2a900 60%, #c98b00);
-  box-shadow: inset 0 0 0 8px rgba(255, 255, 255, 0.35), inset 0 0 0 12px rgba(74, 53, 0, 0.2);
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-}
-/* في الوضع الداكن الذهبي أفتح شوي (نفس قيمة --color-secondary الداكنة، بس مكتوبة صريحة) */
-@media (prefers-color-scheme: dark) {
-  .coin-face { background: radial-gradient(circle at 35% 30%, #ffd860, #f2b632 60%, #c98b00); }
-}
-.coin-back { transform: rotateX(180deg); }
 
 .coin-result {
   margin: var(--space-1) 0 var(--space-2);

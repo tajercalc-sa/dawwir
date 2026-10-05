@@ -1,7 +1,7 @@
 /* =========================================================
    دوّر — رمي النرد
    يعتمد على الدوال المشتركة في common.js: randomInt
-   وعلى محرك الـ 3D في dice3d.js لرسم d4, d8, d10, d12, d20 (نرد الـ d6 مكعب CSS)
+   وعلى محرك الـ 3D في dice3d.js لرسم كل الأنواع على canvas (d4, d6, d8, d10, d12, d20)
    الأجزاء بالترتيب:
    1) الإعدادات  2) عناصر الصفحة  3) الصوت  4) رسم النرد  5) الحركة  6) الرمي  7) الأحداث والتشغيل
    ========================================================= */
@@ -14,37 +14,14 @@
   const ROLL_DURATION = 1200; // مدة دوران النرد بالملي ثانية (كل الأنواع)
   const STAGGER = 90; // تأخير كل نرد عن اللي قبله
   const EASE_POINTS = [0.15, 0.75, 0.25, 1]; // سريع في البداية وتباطؤ في النهاية
-  const EASE_OUT = `cubic-bezier(${EASE_POINTS.join(", ")})`;
   const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-
-  // أماكن النقاط في نرد الـ 6 أوجه، على شبكة 3×3 (الخانات من 0 إلى 8)
-  const PIPS = {
-    1: [4],
-    2: [0, 8],
-    3: [0, 4, 8],
-    4: [0, 2, 6, 8],
-    5: [0, 2, 4, 6, 8],
-    6: [0, 2, 3, 5, 6, 8],
-  };
-
-  // مكان كل وجه على المكعب (مثل النرد الحقيقي: كل وجهين متقابلين مجموعهم 7)
-  const FACE_CLASS = { 1: "front", 6: "back", 3: "right", 4: "left", 2: "top", 5: "bottom" };
-
-  // دوران المكعب اللي يخلي الوجه المطلوب مقابل الشاشة: [محور X, محور Y]
-  const FACE_ROTATION = {
-    1: [0, 0],
-    6: [0, 180],
-    3: [0, -90],
-    4: [0, 90],
-    2: [-90, 0],
-    5: [90, 0],
-  };
 
   /* ---------- 2) عناصر الصفحة ---------- */
 
   const tray = document.getElementById("dice-tray");
   const totalEl = document.getElementById("dice-total");
   const detailEl = document.getElementById("dice-detail");
+  const announceEl = document.getElementById("dice-announce"); // مخفي بصرياً، يعلن النتيجة للقارئ الصوتي
   const rollBtn = document.getElementById("roll-btn");
   const muteBtn = document.getElementById("mute-btn");
   const countInputs = document.querySelectorAll('input[name="dice-count"]');
@@ -138,57 +115,17 @@
 
   /* ---------- 4) رسم النرد ---------- */
 
-  // وجه واحد من المكعب: 9 خانات والنقاط تنور حسب الرقم
-  function createFace(value) {
-    const face = document.createElement("span");
-    face.className = `cube-face cube-${FACE_CLASS[value]}`;
-    for (let i = 0; i < 9; i++) {
-      const pip = document.createElement("span");
-      pip.className = PIPS[value].includes(i) ? "pip on" : "pip";
-      face.append(pip);
-    }
-    return face;
-  }
-
-  // نرد 6 أوجه: مكعب 3D فيه 6 أوجه + ظل تحته
-  function createCube() {
+  // كل الأنواع: مجسّم 3D مرسوم على canvas (من dice3d.js) + ظل تحته وقفزة.
+  // الـ canvas ما تقلب ألوانه متصفحات الوضع الليلي الإجباري، عكس ألوان الـ CSS
+  function createDie(faces) {
     const die = document.createElement("div");
-    die.className = "die die-3d";
-    const shadow = document.createElement("span");
-    shadow.className = "die-shadow";
-    const hop = document.createElement("span");
-    hop.className = "die-hop";
-    const cube = document.createElement("span");
-    cube.className = "cube";
-    // 3 ألواح داخلية تسد الفراغ عند الزوايا المدوّرة
-    for (let i = 0; i < 3; i++) {
-      const core = document.createElement("span");
-      core.className = `cube-core cube-core-${i}`;
-      cube.append(core);
-    }
-    for (let v = 1; v <= 6; v++) cube.append(createFace(v));
-    hop.append(cube);
-    die.append(shadow, hop);
-    return die;
-  }
-
-  // باقي الأنواع: مجسّم 3D مرسوم على canvas (من dice3d.js) + نفس الظل والقفزة
-  function createPolyDie(faces) {
-    const die = document.createElement("div");
-    die.className = "die die-poly";
+    die.className = "die";
     const shadow = document.createElement("span");
     shadow.className = "die-shadow";
     const hop = document.createElement("span");
     hop.className = "die-hop";
     die.append(shadow, hop);
     die._poly = Dice3D.create(faces, die, hop);
-    return die;
-  }
-
-  function createDie(faces) {
-    const die = faces === 6 ? createCube() : createPolyDie(faces);
-    die.setAttribute("role", "img");
-    die.setAttribute("aria-label", "نرد");
     die.dataset.value = "";
     return die;
   }
@@ -197,45 +134,17 @@
   function resetTray() {
     const faces = diceFaces();
     // نوقف متابعة حجم النرد القديم قبل ما نشيله
-    [...tray.children].forEach((die) => die._poly && die._poly.destroy());
+    [...tray.children].forEach((die) => die._poly.destroy());
     const dice = Array.from({ length: diceCount() }, () => createDie(faces));
     tray.replaceChildren(...dice);
-    // المكعب يبدأ مائل شوي عشان يبان إنه 3D
-    dice.forEach((die) => {
-      if (faces === 6) setCubeAngles(die, { x: -16, y: 22, z: 0 });
-    });
     totalEl.textContent = "—";
     detailEl.textContent = "";
   }
 
   /* ---------- 5) الحركة ---------- */
 
-  const cubeTransform = (a) => `rotateZ(${a.z}deg) rotateX(${a.x}deg) rotateY(${a.y}deg)`;
-
-  // نحفظ زاوية المكعب الحالية عشان الرمية الجاية تبدأ منها بدون قفزة
-  function setCubeAngles(die, angles) {
-    const cube = die.querySelector(".cube");
-    die._angles = angles;
-    cube.style.transform = cubeTransform(angles);
-  }
-
   // اتجاه عشوائي (+1 أو -1)
   const randomSign = () => (randomInt(0, 1) ? 1 : -1);
-
-  // زوايا النهاية: الوجه المطلوب مقابل الشاشة + لفّات كاملة عشوائية على المحورين
-  // اللفّات الكاملة (مضاعفات 360) ما تغيّر الوجه اللي يوقف عليه
-  function targetAngles(value, from) {
-    const [baseX, baseY] = FACE_ROTATION[value];
-    const turnsX = randomInt(1, 3) * randomSign();
-    const turnsY = randomInt(1, 3) * randomSign();
-    // دوران حول محور الشاشة (Z) ما يغيّر الوجه الأمامي، بس يخلي شكل النقاط مختلف كل مرة
-    const z = randomInt(0, 3) * 90 + randomInt(-6, 6);
-    return {
-      x: baseX + 360 * (Math.round(from.x / 360) + turnsX),
-      y: baseY + 360 * (Math.round(from.y / 360) + turnsY),
-      z,
-    };
-  }
 
   // قفزة لفوق ثم نزول، والظل يصغر وهو فوق (transform فقط). مشتركة بين كل الأنواع
   function animateHop(die, delay) {
@@ -264,42 +173,36 @@
     );
   }
 
-  // حركة مكعب واحد. يرجّع Promise تخلص لما يوقف
-  function animateCube(die, value, delay) {
-    const cube = die.querySelector(".cube");
-    const from = die._angles;
-    const to = targetAngles(value, from);
-    setCubeAngles(die, to);
-
-    const timing = { duration: ROLL_DURATION, delay, easing: EASE_OUT, fill: "backwards" };
-    const spin = cube.animate([{ transform: cubeTransform(from) }, { transform: cubeTransform(to) }], timing);
+  // حركة نرد واحد: نفس المدة والتباطؤ والقفزة لكل الأنواع، والدوران يرسمه dice3d.js
+  // يرجّع Promise تخلص لما يوقف
+  function animateDie(die, value, delay, faces) {
     animateHop(die, delay);
-    return spin.finished;
-  }
-
-  // حركة باقي الأنواع: نفس المدة والتباطؤ والقفزة، والدوران يرسمه dice3d.js
-  function animatePoly(die, value, delay) {
-    animateHop(die, delay);
+    // ميلان بسيط حول محور الشاشة. في الـ d6 كمان ربع لفّة عشوائية (ما تغيّر الوجه)
+    // عشان ترتيب النقاط يختلف كل رمية. في الباقي الرقم يبقى معتدل
+    const tiltDeg = (faces === 6 ? randomInt(0, 3) * 90 : 0) + randomInt(-6, 6);
     return die._poly.roll(value, {
       delay,
       duration: ROLL_DURATION,
       easing: EASE_POINTS,
       turnsX: randomInt(1, 3) * randomSign(),
       turnsY: randomInt(1, 3) * randomSign(),
-      tilt: (randomInt(-6, 6) * Math.PI) / 180, // ميلان بسيط مثل الـ d6، والرقم يبقى معتدل
+      tilt: (tiltDeg * Math.PI) / 180,
     });
   }
 
   /* ---------- 6) الرمي ---------- */
 
-  // نكتب النتيجة: على كل نرد (للقارئ الصوتي) وفي المجموع
+  // نكتب النتيجة: على كل نرد (للقارئ الصوتي) وفي المجموع، ونعلنها مرة وحدة
   function showResult(dice, values) {
     dice.forEach((die, i) => {
       die.dataset.value = values[i];
-      die.setAttribute("aria-label", `نرد: ${values[i]}`);
+      die._poly.setLabel(`نرد: ${values[i]}`);
     });
-    totalEl.textContent = values.reduce((a, b) => a + b, 0);
+    const total = values.reduce((a, b) => a + b, 0);
+    totalEl.textContent = total;
     detailEl.textContent = values.length > 1 ? values.join(" + ") : "";
+    announceEl.textContent =
+      values.length > 1 ? `النتيجة: ${values.join(" و ")}، المجموع ${total}` : `النتيجة: ${total}`;
   }
 
   function roll() {
@@ -314,10 +217,7 @@
 
     // تقليل الحركة: النتيجة تظهر مباشرة بدون دوران
     if (motionQuery.matches) {
-      dice.forEach((die, i) => {
-        if (faces === 6) setCubeAngles(die, { x: FACE_ROTATION[values[i]][0], y: FACE_ROTATION[values[i]][1], z: 0 });
-        else die._poly.show(values[i]);
-      });
+      dice.forEach((die, i) => die._poly.show(values[i]));
       showResult(dice, values);
       sound.thud();
       return;
@@ -332,8 +232,8 @@
       const delay = i * STAGGER;
       // صوت الارتطام وقت ما يوقف كل نرد (تقريباً عند 85% من الحركة)
       sound.thud((delay + ROLL_DURATION * 0.85) / 1000);
-      die.setAttribute("aria-label", "نرد يتدحرج");
-      return faces === 6 ? animateCube(die, values[i], delay) : animatePoly(die, values[i], delay);
+      die._poly.setLabel("نرد يتدحرج");
+      return animateDie(die, values[i], delay, faces);
     });
 
     // المجموع يتحدث مرة وحدة بعد ما يوقف آخر نرد، فالقارئ الصوتي يقرأ النتيجة النهائية بس

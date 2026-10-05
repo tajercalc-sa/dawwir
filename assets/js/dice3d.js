@@ -1,6 +1,8 @@
 /* =========================================================
-   دوّر — محرك 3D صغير لرسم النرد على canvas (d4, d8, d10, d12, d20)
+   دوّر — محرك 3D صغير لرسم النرد على canvas (d4, d6, d8, d10, d12, d20)
    بدون مكتبات: الأشكال محسوبة رياضياً، والرسم بترتيب العمق مع إخفاء الأوجه الخلفية
+   ليش canvas؟ متصفحات الوضع الليلي الإجباري (مثل Samsung Internet) تقلب ألوان الـ CSS،
+   بس ما تلمس بكسلات الـ canvas، فالنرد يبقى عاجي في كل الأحوال
    يُستخدم من dice.js عن طريق window.Dice3D
    الأجزاء بالترتيب:
    1) أدوات المتجهات والـ quaternion  2) بناء الأشكال  3) ترقيم الأوجه
@@ -179,6 +181,9 @@
     if (sides === 4) {
       const v = [[1, 1, 1], [1, -1, -1], [-1, 1, -1], [-1, -1, 1]];
       shape = { vertices: v, faces: facesFromNormals(v, v.map((p) => scale(p, -1))) };
+    } else if (sides === 6) {
+      const v = signs([1, 1, 1]);
+      shape = { vertices: v, faces: facesFromNormals(v, [...signs([1, 0, 0]), ...signs([0, 1, 0]), ...signs([0, 0, 1])]) };
     } else if (sides === 8) {
       const v = [...signs([1, 0, 0]), ...signs([0, 1, 0]), ...signs([0, 0, 1])];
       shape = { vertices: v, faces: facesFromNormals(v, signs([1, 1, 1])) };
@@ -192,8 +197,34 @@
     unitScale(shape);
     shape.sides = sides;
     shape.faces.forEach((f) => prepareFace(shape, f));
+    if (sides === 6) shape.faces.forEach(prepareCubeFace);
     numberFaces(shape);
     return shape;
+  }
+
+  // وجه المكعب: "فوق" موازي لحافة (مو للزاوية مثل باقي الأشكال) عشان النقاط تجي على شبكة مستقيمة،
+  // وحدود الوجه مربع بزوايا مدوّرة (نفس border-radius: 18% في المكعب القديم)
+  const CUBE_CORNER = 0.36; // نصف قطر الزاوية نسبة من نصف الضلع (18% من الضلع)
+  function prepareCubeFace(face) {
+    const n = face.normal;
+    face.up = Math.abs(n[1]) > 0.5 ? [0, 0, -n[1]] : [0, 1, 0];
+    face.right = cross(face.up, face.normal);
+    const half = face.inradius; // في المكعب: المسافة من المركز للحافة = نصف الضلع
+    const r = half * CUBE_CORNER;
+    // نقاط الحد: ربع دائرة عند كل زاوية (7 نقاط لكل ربع)
+    face.outline = [];
+    const corners = [[1, 1], [-1, 1], [-1, -1], [1, -1]];
+    corners.forEach(([sx, sy], k) => {
+      const cx = sx * (half - r);
+      const cy = sy * (half - r);
+      const start = (k * Math.PI) / 2;
+      for (let i = 0; i <= 6; i++) {
+        const a = start + (i / 6) * (Math.PI / 2);
+        const x = cx + Math.cos(a) * r;
+        const y = cy + Math.sin(a) * r;
+        face.outline.push(add(face.center, add(scale(face.right, x), scale(face.up, y))));
+      }
+    });
   }
 
   // معلومات ثابتة لكل وجه: المركز، الاتجاه "فوق" للرقم، والمساحة المتاحة للرقم
@@ -247,7 +278,7 @@
   }
 
   const SHAPES = {};
-  [4, 8, 10, 12, 20].forEach((n) => (SHAPES[n] = buildShape(n)));
+  [4, 6, 8, 10, 12, 20].forEach((n) => (SHAPES[n] = buildShape(n)));
 
   // الدوران اللي يخلي وجه معيّن مقابل الشاشة والرقم معتدل:
   // يحوّل (right, up, normal) للوجه إلى (x, y, z) للشاشة
@@ -287,20 +318,40 @@
 
   /* ---------- 4) الرسم ---------- */
 
-  const PERSPECTIVE = 600; // نفس perspective مكعب الـ d6 في CSS
+  const PERSPECTIVE = 600;
   const LIGHT = normalize([-0.3, 0.45, 0.85]); // الضوء جاي من فوق يسار وقدّام
   // الـ d4 بعد ميلانه (REST_TILT) وجهه الفائز يطالع يمين وتحت شوي، والوجه الجانبي يسار وفوق،
-  // فنجيب له الضوء من نفس اتجاه الوجه الفائز عشان يكون هو الأفتح والجانبي أغمق بوضوح
-  const LIGHT_BY_SIDES = { 4: normalize([0.4, -0.25, 0.88]) };
-  const LIGHT_COLOR = [255, 253, 248]; // نفس لون أوجه مكعب الـ d6
+  // فنجيب له الضوء من نفس اتجاه الوجه الفائز عشان يكون هو الأفتح والجانبي أغمق بوضوح.
+  // الـ d6 يوقف ووجهه مقابل الشاشة، فنخلي الضوء شبه أمامي عشان الوجه الفائز يطلع عاجي فاتح
+  const LIGHT_BY_SIDES = { 4: normalize([0.4, -0.25, 0.88]), 6: normalize([-0.2, 0.3, 0.93]) };
+  const LIGHT_COLOR = [255, 253, 248]; // عاجي (#fffdf8)
   const DARK_COLOR = [204, 195, 175];
   const EDGE_COLOR = "rgba(28, 35, 33, 0.16)";
-  const TEXT_COLOR = "#1c2321"; // نفس لون النقاط في مكعب الـ d6
+  const TEXT_COLOR = "#1c2321"; // نفس لون نقاط الـ d6
   const TEXT_UNITS = 100; // الرقم يتقاس بوحدات أكبر عشان الخط ما يصير صغير جداً قبل التكبير
   const FONT = "Cairo, system-ui, sans-serif";
 
+  // ألوان المكعب (d6)
+  const CUBE_BODY = "rgb(214, 206, 189)"; // الجسم اللي يبان عند الزوايا المدوّرة بين الأوجه
+  const CUBE_INNER_SHADOW = "rgba(0, 0, 0, 0.08)";
+  const PIP_LIGHT = "#33403c"; // النقطة محفورة: أفتح شوي تحت وأغمق فوق
+  const PIP_DARK = "#121715";
+
+  // أماكن النقاط في الـ d6 على شبكة 3×3 (الخانات من 0 إلى 8، صف صف من فوق)
+  const PIPS = {
+    1: [4],
+    2: [0, 8],
+    3: [0, 4, 8],
+    4: [0, 2, 6, 8],
+    5: [0, 2, 4, 6, 8],
+    6: [0, 2, 3, 5, 6, 8],
+  };
+  const PIP_OFFSET = 0.507; // بعد صفوف/أعمدة النقاط عن المركز (نسبة من نصف الضلع)
+  const PIP_RADIUS = 0.182; // نصف قطر النقطة (نسبة من نصف الضلع)
+
   // حجم الشكل نسبة لحجم مربع النرد (عشان كل الأنواع تبان بنفس الحجم تقريباً)
-  const SIZE_FACTOR = { 4: 0.8, 8: 0.68, 10: 0.66, 12: 0.64, 20: 0.64 };
+  // الـ d6: ضلع المكعب = حجم المربع بالضبط (نصف قطر المكعب = √3 / 2 من الضلع)
+  const SIZE_FACTOR = { 4: 0.8, 6: Math.sqrt(3) / 2, 8: 0.68, 10: 0.66, 12: 0.64, 20: 0.64 };
 
   // كل رقم نرسمه مرة وحدة على canvas صغير (sprite)، وبعدها ننسخه مائل مع الوجه بـ drawImage
   // هذا أسرع بكثير من fillText كل فريم بزاوية مختلفة (المتصفح يعيد رسم الخط من الصفر كل مرة)
@@ -349,45 +400,34 @@
     return sprite;
   }
 
-  function shade(normal, light) {
+  // لون الوجه حسب زاويته مع الضوء: [r, g, b]
+  function shadeRGB(normal, light) {
     const k = Math.max(0, dot(normal, light));
     const t = 0.3 + 0.7 * k;
-    const c = DARK_COLOR.map((d, i) => Math.round(d + (LIGHT_COLOR[i] - d) * t));
-    return `rgb(${c[0]}, ${c[1]}, ${c[2]})`;
+    return DARK_COLOR.map((d, i) => Math.round(d + (LIGHT_COLOR[i] - d) * t));
+  }
+  const rgb = (c) => `rgb(${c.map(Math.round).join(", ")})`;
+  const shade = (normal, light) => rgb(shadeRGB(normal, light));
+  const mix = (a, b, t) => a.map((v, i) => v + (b[i] - v) * t);
+
+  // أبسط غلاف محدّب (convex hull) لنقاط على الشاشة، بطريقة monotone chain
+  function convexHull(points) {
+    const p = points.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+    const turn = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+    const half = (list) => {
+      const out = [];
+      for (const q of list) {
+        while (out.length >= 2 && turn(out[out.length - 2], out[out.length - 1], q) <= 0) out.pop();
+        out.push(q);
+      }
+      out.pop();
+      return out;
+    };
+    return [...half(p), ...half(p.reverse())];
   }
 
   /* ---------- 5) الحركة ---------- */
-
-  // cubic-bezier مثل CSS: نحل x(t) = الوقت بطريقة Newton ثم نرجّع y(t)
-  function bezier(x1, y1, x2, y2) {
-    const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx;
-    const cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
-    const curveX = (t) => ((ax * t + bx) * t + cx) * t;
-    const curveY = (t) => ((ay * t + by) * t + cy) * t;
-    const slopeX = (t) => (3 * ax * t + 2 * bx) * t + cx;
-    return (x) => {
-      if (x <= 0) return 0;
-      if (x >= 1) return 1;
-      let t = x;
-      for (let i = 0; i < 8; i++) {
-        const err = curveX(t) - x;
-        const s = slopeX(t);
-        if (Math.abs(err) < 1e-6 || Math.abs(s) < 1e-6) break;
-        t -= err / s;
-      }
-      // احتياط: لو Newton طلع برّا المدى نستخدم التنصيف
-      if (t < 0 || t > 1 || Math.abs(curveX(t) - x) > 1e-4) {
-        let lo = 0, hi = 1;
-        t = x;
-        for (let i = 0; i < 30; i++) {
-          if (curveX(t) < x) lo = t;
-          else hi = t;
-          t = (lo + hi) / 2;
-        }
-      }
-      return curveY(t);
-    };
-  }
+  // التباطؤ (cubicBezier) في common.js، لأن العملة تستخدمه كمان
 
   // حلقة رسم وحدة لكل النرد المتحرك. تشتغل بس أثناء الحركة وتوقف لما يوقف آخر نرد
   const moving = new Set();
@@ -419,6 +459,9 @@
       this.box = box;
       this.canvas = document.createElement("canvas");
       this.canvas.className = "die-canvas";
+      // للقارئ الصوتي: الـ canvas صورة، ووصفها يتحدث مع النتيجة (setLabel)
+      this.canvas.setAttribute("role", "img");
+      this.canvas.setAttribute("aria-label", "نرد");
       this.ctx = this.canvas.getContext("2d");
       parent.append(this.canvas);
       this.q = idlePose(this.shape);
@@ -482,6 +525,11 @@
       }
       visible.sort((a, b) => a.c[2] - b.c[2]);
 
+      if (shape.sides === 6) {
+        this.renderCube(visible, m);
+        return;
+      }
+
       ctx.lineJoin = "round";
       ctx.lineWidth = 1;
       ctx.strokeStyle = EDGE_COLOR;
@@ -503,31 +551,119 @@
       }
     }
 
+    // المكعب (d6): جسم بزوايا مدوّرة، وأوجه عاجية بتدرج وظل داخلي، ونقاط داكنة
+    renderCube(visible, m) {
+      const { ctx, dpr, shape } = this;
+      const light = LIGHT_BY_SIDES[6];
+      const toScreen = (p) => this.project(mApply(m, p));
+      const tracePath = (points) => {
+        ctx.beginPath();
+        points.forEach((p, k) => (k ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])));
+        ctx.closePath();
+      };
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      // 1) الجسم: الغلاف المحدّب لحدود كل الأوجه (المدوّرة)، فيطلع شكل خارجي بزوايا ناعمة
+      //    ويسد الفراغ اللي تتركه الزوايا المدوّرة بين الأوجه
+      const all = [];
+      shape.faces.forEach((f) => f.outline.forEach((p) => all.push(toScreen(p))));
+      tracePath(convexHull(all));
+      ctx.fillStyle = CUBE_BODY;
+      ctx.fill();
+
+      ctx.lineJoin = "round";
+      for (const v of visible) {
+        const face = v.face;
+        const outline = face.outline.map(toScreen);
+        const base = shadeRGB(v.n, light);
+        // تدرج دائري: الوسط أفتح (قريب من العاجي) والأطراف أغمق شوي، مثل radial-gradient القديم
+        const center = toScreen(add(face.center, scale(face.up, face.inradius * 0.1)));
+        const corner = toScreen(face.outline[0]);
+        const radius = Math.hypot(corner[0] - center[0], corner[1] - center[1]);
+        const gradient = ctx.createRadialGradient(center[0], center[1], 0, center[0], center[1], radius);
+        gradient.addColorStop(0, rgb(mix(base, LIGHT_COLOR, 0.6)));
+        gradient.addColorStop(0.55, rgb(mix(base, LIGHT_COLOR, 0.6)));
+        gradient.addColorStop(1, rgb(base.map((c) => c * 0.93)));
+
+        tracePath(outline);
+        ctx.fillStyle = gradient;
+        ctx.fill();
+        // ظل داخلي: خط داخل حدود الوجه بس (نقص النص الخارجي بـ clip)
+        ctx.save();
+        ctx.clip();
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = CUBE_INNER_SHADOW;
+        ctx.stroke();
+        ctx.restore();
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = EDGE_COLOR;
+        ctx.stroke();
+
+        if (v.facing > 0.2) this.drawPips(face, m, v.facing);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+    }
+
+    // تحويل affine من مستوى الوجه للشاشة: وحدة وحدة من الشكل، و y لتحت (مثل الـ canvas)
+    faceTransform(face, m, k) {
+      const e = 0.05;
+      const p0 = this.project(mApply(m, face.center));
+      const px = this.project(mApply(m, add(face.center, scale(face.right, e))));
+      const py = this.project(mApply(m, add(face.center, scale(face.up, e))));
+      const { dpr } = this;
+      this.ctx.setTransform(
+        ((px[0] - p0[0]) / e) * k * dpr,
+        ((px[1] - p0[1]) / e) * k * dpr,
+        (-(py[0] - p0[0]) / e) * k * dpr,
+        (-(py[1] - p0[1]) / e) * k * dpr,
+        p0[0] * dpr,
+        p0[1] * dpr
+      );
+    }
+
+    // نقاط الـ d6: دوائر داكنة على الوجه، مائلة معه، بنفس ترتيب النرد الحقيقي
+    drawPips(face, m, facing) {
+      const { ctx } = this;
+      const half = face.inradius;
+      const offset = half * PIP_OFFSET;
+      const r = half * PIP_RADIUS;
+      this.faceTransform(face, m, 1);
+      ctx.globalAlpha = Math.min(1, (facing - 0.2) / 0.25);
+      for (const cell of PIPS[face.label]) {
+        const x = ((cell % 3) - 1) * offset;
+        const y = (Math.floor(cell / 3) - 1) * offset;
+        // النقطة محفورة: أفتح تحت وأغمق عند الحافة فوق
+        const g = ctx.createRadialGradient(x, y + r * 0.35, 0, x, y, r);
+        g.addColorStop(0, PIP_LIGHT);
+        g.addColorStop(1, PIP_DARK);
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, 2 * Math.PI);
+        ctx.fillStyle = g;
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
+
     // الرقم في وسط الوجه، ومائل معه: نحسب تحويل affine من مستوى الوجه للشاشة
     drawLabel(face, m, facing) {
-      const { ctx, dpr, shape } = this;
+      const { ctx, shape } = this;
       // تحت 6 و 9 خط صغير يفرّق بينهم (في d10 و d12 و d20)
       const underline = shape.sides >= 10 && (face.label === 6 || face.label === 9);
       const sprite = labelSprite(String(face.label), underline);
       // حجم الرقم (وحدات الشكل لكل وحدة نص): يتسع داخل دائرة نصف قطرها أصغر شوي من أقرب حافة
       const fit = (face.inradius * 0.9) / Math.hypot(sprite.width / 2, sprite.height / 2);
       const k = Math.min(fit, (face.inradius * 1.25) / sprite.height);
-
-      const e = 0.05;
-      const p0 = this.project(mApply(m, face.center));
-      const px = this.project(mApply(m, add(face.center, scale(face.right, e))));
-      const py = this.project(mApply(m, add(face.center, scale(face.up, e))));
-      const a = ((px[0] - p0[0]) / e) * k;
-      const b = ((px[1] - p0[1]) / e) * k;
-      const c = (-(py[0] - p0[0]) / e) * k;
-      const d = (-(py[1] - p0[1]) / e) * k;
-      ctx.setTransform(a * dpr, b * dpr, c * dpr, d * dpr, p0[0] * dpr, p0[1] * dpr);
+      this.faceTransform(face, m, k);
 
       // الرقم يظهر تدريجياً كل ما الوجه يلف قدّام (بدل ما يطلع فجأة)
       ctx.globalAlpha = Math.min(1, (facing - 0.2) / 0.25);
       // الـ sprite متوسّط حول مركز الوجه
       ctx.drawImage(sprite.canvas, -sprite.drawW / 2, -sprite.drawH / 2, sprite.drawW, sprite.drawH);
       ctx.globalAlpha = 1;
+    }
+
+    setLabel(text) {
+      this.canvas.setAttribute("aria-label", text);
     }
 
     // يحط النرد على وجه معيّن مباشرة (لتقليل الحركة)
@@ -542,7 +678,7 @@
     roll(value, opts) {
       const from = this.q;
       const to = qMul(qAxis(Z_AXIS, opts.tilt || 0), restRotation(this.shape, value));
-      const ease = bezier(...opts.easing);
+      const ease = cubicBezier(...opts.easing);
       const start = performance.now() + opts.delay;
       return new Promise((resolve) => {
         this.step = (now) => {
