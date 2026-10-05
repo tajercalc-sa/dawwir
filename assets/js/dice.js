@@ -137,8 +137,95 @@
     [...tray.children].forEach((die) => die._poly.destroy());
     const dice = Array.from({ length: diceCount() }, () => createDie(faces));
     tray.replaceChildren(...dice);
+    layoutTray();
     totalEl.textContent = "—";
     detailEl.textContent = "";
+  }
+
+  /* ---------- 4ب) توزيع النرد بدون تلامس ---------- */
+  // كل نرد ياخذ دائرة آمنة نصف قطرها = أبعد نقطة ممكن يوصلها وهو يدور (أبعد رأس + تكبير المنظور)،
+  // فما يتلامس نردين أبداً حتى في أسوأ وضع دوران. بين كل دائرتين مسافة آمنة ثابتة،
+  // وبين الصفوف كمان ارتفاع القفزة (لأن النرد اللي تحت ممكن يقفز وهو اللي فوق نازل)
+
+  const PERSPECTIVE = 600; // نفس PERSPECTIVE في dice3d.js
+  const HOP_HEIGHT = 22; // أعلى قفزة في animateHop
+  const SAFE_GAP = { mobile: 12, desktop: 20 };
+  const MAX_PER_ROW = { mobile: 3, desktop: 6 };
+
+  // أبعد مسافة على الشاشة لنقطة على كرة نصف قطرها r بعد المنظور (لأي اتجاه دوران)
+  function projectedRadius(r) {
+    let max = r;
+    for (let i = 0; i <= 90; i++) {
+      const a = (i * Math.PI) / 180;
+      max = Math.max(max, (r * Math.sin(a) * PERSPECTIVE) / (PERSPECTIVE - r * Math.cos(a)));
+    }
+    return max;
+  }
+
+  function layoutTray() {
+    const dice = [...tray.children];
+    if (!dice.length) return;
+    const desktop = DESKTOP_QUERY.matches;
+    const gap = desktop ? SAFE_GAP.desktop : SAFE_GAP.mobile;
+
+    // الحجم الأصلي من الـ CSS (64px أو 76px حسب عرض الشاشة)، قبل أي تصغير
+    tray.style.removeProperty("--die-size");
+    const baseSize = parseFloat(getComputedStyle(tray).getPropertyValue("--die-size"));
+    // نسبة نصف قطر الشكل لحجم المربع حسب نوع النرد (نقرأها من المحرك بعد ما يحسب المقاس)
+    dice[0]._poly.resize();
+    const shapeRatio = dice[0]._poly.radius / baseSize;
+    // نصف قطر الدائرة الآمنة لحجم معيّن (بالمنظور، محسوب على الحجم الأصلي عشان يكون الأحوط)
+    const perspectiveFactor = projectedRadius(baseSize * shapeRatio) / (baseSize * shapeRatio);
+    const safeRadius = (size) => size * shapeRatio * perspectiveFactor;
+
+    // أكبر حجم يخلي "cols" نرد يكفون في صف واحد
+    // (كل نرد حوله نص المسافة الآمنة من الجهتين، فالصف = cols × (قطر + مسافة))
+    const width = tray.getBoundingClientRect().width;
+    const fitSize = (cols) => (width - cols * gap) / (cols * 2 * shapeRatio * perspectiveFactor);
+
+    // نختار عدد الأعمدة: على الجوال لين 3 في الصف (نفس الشكل القديم) ونصغّر لو لزم.
+    // على الكمبيوتر لين 6، ونختار التوزيع اللي يخلي النرد أكبر (وعند التساوي: صفوف أقل)
+    const n = dice.length;
+    let cols;
+    if (desktop) {
+      let best = -1;
+      for (let rows = Math.ceil(n / MAX_PER_ROW.desktop); rows <= n; rows++) {
+        const c = Math.ceil(n / rows);
+        const size = Math.min(baseSize, fitSize(c));
+        if (size > best + 0.01) {
+          best = size;
+          cols = c;
+        }
+      }
+    } else {
+      cols = Math.min(n, MAX_PER_ROW.mobile);
+    }
+    // صفوف متوازنة: 5 = 3 + 2، و 4 = 2 + 2
+    const rows = Math.ceil(n / cols);
+    cols = Math.ceil(n / rows);
+
+    // نصغّر بس لو فيه تلامس فعلي، وبأقل مقدار.
+    // الحجم عدد صحيح لأن المحرك يقرأ الحجم بـ clientWidth (يقرّب لأقرب بكسل)،
+    // ولو كان فيه كسور كان المحرك يرسم النرد أكبر شوي من الدائرة الآمنة
+    const size = Math.min(baseSize, Math.floor(fitSize(cols)));
+    const radius = safeRadius(size);
+    // المسافة بين المراكز: أفقياً = قطر + مسافة آمنة، وعمودياً كمان + القفزة
+    const marginX = (2 * radius + gap - size) / 2;
+    const marginY = (2 * radius + gap + HOP_HEIGHT - size) / 2;
+    const rowWidth = cols * (size + 2 * marginX);
+
+    if (size < baseSize) tray.style.setProperty("--die-size", `${size}px`);
+    tray.style.gap = "0px"; // المسافات كلها صارت في margin كل نرد
+    tray.style.setProperty("--die-margin-x", `${marginX}px`);
+    tray.style.setProperty("--die-margin-y", `${marginY}px`);
+    // padding جانبي يخلي العرض المتاح = صف واحد بالضبط، فالنرد يلتف عند "cols" (+1px هامش للتقريب)
+    tray.style.paddingInline = `${Math.max(0, (width - rowWidth) / 2 - 1)}px`;
+  }
+
+  let layoutFrame;
+  function scheduleLayout() {
+    cancelAnimationFrame(layoutFrame);
+    layoutFrame = requestAnimationFrame(layoutTray);
   }
 
   /* ---------- 5) الحركة ---------- */
@@ -289,6 +376,9 @@
     updateMuteButton();
   });
   tray.addEventListener("click", roll);
+  // عرض الشاشة يغيّر عدد النرد في الصف وحجمه
+  window.addEventListener("resize", scheduleLayout);
+  DESKTOP_QUERY.addEventListener("change", scheduleLayout);
 
   updateMuteButton();
   resetTray();

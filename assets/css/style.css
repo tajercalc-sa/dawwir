@@ -924,6 +924,8 @@ textarea {
   position: relative;
   width: var(--die-size);
   height: var(--die-size);
+  /* المسافات بين النرد يحسبها layoutTray في dice.js (دائرة آمنة حول كل نرد) */
+  margin: var(--die-margin-y, 0) var(--die-margin-x, 0);
 }
 
 /* كل الأنواع (d4, d6, d8, d10, d12, d20): مجسّم مرسوم على canvas من dice3d.js
