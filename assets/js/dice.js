@@ -14,6 +14,7 @@
   const ROLL_DURATION = 1200; // مدة دوران النرد بالملي ثانية (كل الأنواع)
   const STAGGER = 90; // تأخير كل نرد عن اللي قبله
   const EASE_POINTS = [0.15, 0.75, 0.25, 1]; // سريع في البداية وتباطؤ في النهاية
+  const REST_SPIN = 6; // أقصى ميلان عشوائي حول محور الشاشة بعد الوقوف (بالدرجات)
   const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
 
   /* ---------- 2) عناصر الصفحة ---------- */
@@ -143,24 +144,17 @@
   }
 
   /* ---------- 4ب) توزيع النرد بدون تلامس ---------- */
-  // كل نرد ياخذ دائرة آمنة نصف قطرها = أبعد نقطة ممكن يوصلها وهو يدور (أبعد رأس + تكبير المنظور)،
-  // فما يتلامس نردين أبداً حتى في أسوأ وضع دوران. بين كل دائرتين مسافة آمنة ثابتة،
-  // وبين الصفوف كمان ارتفاع القفزة (لأن النرد اللي تحت ممكن يقفز وهو اللي فوق نازل)
+  // المسافات تنحسب من أعرض شكل ممكن للنرد وهو واقف (وضع الانتظار قبل أول رمية، ووضع الاستقرار بعدها)،
+  // أفقياً ورأسياً كل واحد لحاله، فبين أي نردين واقفين مسافة آمنة ثابتة بدون أي تلامس.
+  // وهو يدور ممكن يوصل لدائرة أكبر (أبعد رأس + تكبير المنظور)، فنسمح بتقارب لحظي بسيط:
+  // دائرتين نردين متجاورين ما تتداخل أكثر من 15% من قطر النرد.
+  // بين الصفوف كمان ارتفاع القفزة (النرد اللي تحت ممكن يقفز وهو اللي فوق نازل)،
+  // وحول النرد من برّا مساحة تكفيه وهو يدور ويقفز، فما يطلع برّا الصينية
 
-  const PERSPECTIVE = 600; // نفس PERSPECTIVE في dice3d.js
   const HOP_HEIGHT = 22; // أعلى قفزة في animateHop
   const SAFE_GAP = { mobile: 12, desktop: 20 };
   const MAX_PER_ROW = { mobile: 3, desktop: 6 };
-
-  // أبعد مسافة على الشاشة لنقطة على كرة نصف قطرها r بعد المنظور (لأي اتجاه دوران)
-  function projectedRadius(r) {
-    let max = r;
-    for (let i = 0; i <= 90; i++) {
-      const a = (i * Math.PI) / 180;
-      max = Math.max(max, (r * Math.sin(a) * PERSPECTIVE) / (PERSPECTIVE - r * Math.cos(a)));
-    }
-    return max;
-  }
+  const ROLL_OVERLAP = 0.15; // أقصى تداخل وهو يدور، نسبة من قطر النرد
 
   function layoutTray() {
     const dice = [...tray.children];
@@ -171,17 +165,37 @@
     // الحجم الأصلي من الـ CSS (64px أو 76px حسب عرض الشاشة)، قبل أي تصغير
     tray.style.removeProperty("--die-size");
     const baseSize = parseFloat(getComputedStyle(tray).getPropertyValue("--die-size"));
-    // نسبة نصف قطر الشكل لحجم المربع حسب نوع النرد (نقرأها من المحرك بعد ما يحسب المقاس)
-    dice[0]._poly.resize();
-    const shapeRatio = dice[0]._poly.radius / baseSize;
-    // نصف قطر الدائرة الآمنة لحجم معيّن (بالمنظور، محسوب على الحجم الأصلي عشان يكون الأحوط)
-    const perspectiveFactor = projectedRadius(baseSize * shapeRatio) / (baseSize * shapeRatio);
-    const safeRadius = (size) => size * shapeRatio * perspectiveFactor;
+    // امتداد النرد على الشاشة (من المحرك) نسبةً لحجمه. محسوب على الحجم الأصلي عشان يكون الأحوط
+    // (على الأحجام الأصغر تكبير المنظور أقل)
+    const poly = dice[0]._poly;
+    poly.resize();
+    const extent = Dice3D.restingExtent(poly.shape.sides, poly.radius, REST_SPIN);
+    const ratio = { x: extent.x / baseSize, y: extent.y / baseSize, full: extent.full / baseSize };
 
-    // أكبر حجم يخلي "cols" نرد يكفون في صف واحد
-    // (كل نرد حوله نص المسافة الآمنة من الجهتين، فالصف = cols × (قطر + مسافة))
+    // المسافة بين مراكز نردين متجاورين لحجم معيّن: الأكبر من شرط الوقوف (عرض الشكل + مسافة آمنة)
+    // وشرط الدوران (تداخل الدائرتين ≤ 15% من القطر). وعمودياً شرط الدوران معه القفزة
+    const spacing = (size) => {
+      const rolling = 2 * (1 - ROLL_OVERLAP) * ratio.full * size;
+      return {
+        x: Math.max(2 * ratio.x * size + gap, rolling),
+        y: Math.max(2 * ratio.y * size + gap, rolling + HOP_HEIGHT),
+      };
+    };
+    // عرض الصف: المسافات بين المراكز + من كل طرف نص مسافة أو دائرة الدوران كاملة (الأكبر)
+    const rowWidth = (size, cols) => {
+      const step = spacing(size).x;
+      return (cols - 1) * step + 2 * Math.max(step / 2, ratio.full * size);
+    };
+
+    // أكبر حجم يخلي "cols" نرد يكفون في صف واحد (لين الحجم الأصلي، ما نكبّر أبداً).
+    // الحجم عدد صحيح لأن المحرك يقرأ الحجم بـ clientWidth (يقرّب لأقرب بكسل)،
+    // ولو كان فيه كسور كان المحرك يرسم النرد أكبر شوي من المحسوب
     const width = tray.getBoundingClientRect().width;
-    const fitSize = (cols) => (width - cols * gap) / (cols * 2 * shapeRatio * perspectiveFactor);
+    const fitSize = (cols) => {
+      let size = Math.floor(baseSize);
+      while (size > 1 && rowWidth(size, cols) > width) size--;
+      return size;
+    };
 
     // نختار عدد الأعمدة: على الجوال لين 3 في الصف (نفس الشكل القديم) ونصغّر لو لزم.
     // على الكمبيوتر لين 6، ونختار التوزيع اللي يخلي النرد أكبر (وعند التساوي: صفوف أقل)
@@ -191,8 +205,8 @@
       let best = -1;
       for (let rows = Math.ceil(n / MAX_PER_ROW.desktop); rows <= n; rows++) {
         const c = Math.ceil(n / rows);
-        const size = Math.min(baseSize, fitSize(c));
-        if (size > best + 0.01) {
+        const size = fitSize(c);
+        if (size > best) {
           best = size;
           cols = c;
         }
@@ -204,22 +218,21 @@
     const rows = Math.ceil(n / cols);
     cols = Math.ceil(n / rows);
 
-    // نصغّر بس لو فيه تلامس فعلي، وبأقل مقدار.
-    // الحجم عدد صحيح لأن المحرك يقرأ الحجم بـ clientWidth (يقرّب لأقرب بكسل)،
-    // ولو كان فيه كسور كان المحرك يرسم النرد أكبر شوي من الدائرة الآمنة
-    const size = Math.min(baseSize, Math.floor(fitSize(cols)));
-    const radius = safeRadius(size);
-    // المسافة بين المراكز: أفقياً = قطر + مسافة آمنة، وعمودياً كمان + القفزة
-    const marginX = (2 * radius + gap - size) / 2;
-    const marginY = (2 * radius + gap + HOP_HEIGHT - size) / 2;
-    const rowWidth = cols * (size + 2 * marginX);
+    // نصغّر بس لو فيه تلامس فعلي، وبأقل مقدار
+    const size = fitSize(cols);
+    const step = spacing(size);
+    const marginX = (step.x - size) / 2;
+    const marginY = (step.y - size) / 2;
+    // فوق وتحت: مساحة تكفي دائرة الدوران مع القفزة (نفس المقدار من الجهتين عشان النرد يبقى في النص)
+    const paddingY = Math.max(0, ratio.full * size + HOP_HEIGHT - step.y / 2);
 
     if (size < baseSize) tray.style.setProperty("--die-size", `${size}px`);
     tray.style.gap = "0px"; // المسافات كلها صارت في margin كل نرد
     tray.style.setProperty("--die-margin-x", `${marginX}px`);
     tray.style.setProperty("--die-margin-y", `${marginY}px`);
+    tray.style.paddingBlock = `${paddingY}px`;
     // padding جانبي يخلي العرض المتاح = صف واحد بالضبط، فالنرد يلتف عند "cols" (+1px هامش للتقريب)
-    tray.style.paddingInline = `${Math.max(0, (width - rowWidth) / 2 - 1)}px`;
+    tray.style.paddingInline = `${Math.max(0, (width - cols * step.x) / 2 - 1)}px`;
   }
 
   let layoutFrame;
@@ -266,7 +279,7 @@
     animateHop(die, delay);
     // ميلان بسيط حول محور الشاشة. في الـ d6 كمان ربع لفّة عشوائية (ما تغيّر الوجه)
     // عشان ترتيب النقاط يختلف كل رمية. في الباقي الرقم يبقى معتدل
-    const tiltDeg = (faces === 6 ? randomInt(0, 3) * 90 : 0) + randomInt(-6, 6);
+    const tiltDeg = (faces === 6 ? randomInt(0, 3) * 90 : 0) + randomInt(-REST_SPIN, REST_SPIN);
     return die._poly.roll(value, {
       delay,
       duration: ROLL_DURATION,

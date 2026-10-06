@@ -299,9 +299,26 @@
     return REST_TILT[shape.sides] ? qMul(REST_TILT[shape.sides], q) : q;
   }
 
-  // الوضع قبل أول رمية: وجه عشوائي مايل بزاوية عشوائية (مو مقابل للشاشة بالضبط)
-  // الميلان معتدل (22° لين 34°) عشان الأوجه ما تنضغط كثير، والدوران حول الشاشة ±25° عشان الأرقام تنقرأ
+  // الوضع قبل أول رمية: وجه عشوائي بميلان مقيّد، عشان النرد يبان مجسّم والأرقام تنقرأ،
+  // وعشان شكله ما يصير أعرض من اللازم (dice.js يحسب المسافات من أعرض وضعية مسموحة، في restingExtent)
+  //  - الميلان 10° لين 18°، واتجاهه قريب من الرأسي (±30°): يبان شوي من الوجه اللي فوق أو اللي تحت
+  //  - الدوران حول الشاشة ±6° بس، وفي الـ d6 ربع لفّة عشوائية (تغيّر ترتيب النقاط بس، مو شكل المكعب)
+  //  - الـ d4 ميلانه هو ميلان الاستقرار نفسه (REST_TILT)، لأن أي ميلان زيادة يخليه أعرض بكثير
   // كل نرد يختلف عن اللي قبله في الوجه اللي قدّام. العشوائية هنا للشكل بس، فـ Math.random تكفي
+  const DEG = Math.PI / 180;
+  const IDLE_TILT = [10, 18];
+  const IDLE_TILT_DIRECTION = 30;
+  const IDLE_SPIN = 6;
+
+  // direction: اتجاه محور الميلان بالدرجات (0 = أفقي فيبان الوجه اللي فوق، 180 = يبان اللي تحت)
+  function idleRotation(shape, face, tilt, direction, spin, quarter) {
+    const turn = qAxis(Z_AXIS, spin * DEG);
+    if (shape.sides === 4) return qMul(turn, restRotation(shape, face));
+    const axis = [Math.cos(direction * DEG), Math.sin(direction * DEG), 0];
+    const front = qMul(qAxis(Z_AXIS, quarter * 90 * DEG), faceRotation(shape, face));
+    return qMul(turn, qMul(qAxis(axis, tilt * DEG), front));
+  }
+
   let lastIdleFace = null;
   function idlePose(shape) {
     const rand = (min, max) => min + Math.random() * (max - min);
@@ -309,11 +326,11 @@
     do face = shape.faces[Math.floor(Math.random() * shape.faces.length)].label;
     while (face === lastIdleFace);
     lastIdleFace = face;
-    const direction = rand(0, 2 * Math.PI);
-    const axis = [Math.cos(direction), Math.sin(direction), 0];
-    const tilt = (rand(22, 34) * Math.PI) / 180;
-    const spin = (rand(-25, 25) * Math.PI) / 180;
-    return qMul(qAxis(Z_AXIS, spin), qMul(qAxis(axis, tilt), faceRotation(shape, face)));
+    const tilt = rand(...IDLE_TILT);
+    const direction = rand(-IDLE_TILT_DIRECTION, IDLE_TILT_DIRECTION) + (Math.random() < 0.5 ? 0 : 180);
+    const spin = rand(-IDLE_SPIN, IDLE_SPIN);
+    const quarter = shape.sides === 6 ? Math.floor(Math.random() * 4) : 0;
+    return idleRotation(shape, face, tilt, direction, spin, quarter);
   }
 
   /* ---------- 4) الرسم ---------- */
@@ -713,6 +730,50 @@
     }
   }
 
+  // أكبر امتداد للنرد على الشاشة بالبكسل (من المركز)، لنرد نصف قطره radius:
+  //  x و y: أفقياً ورأسياً، في كل وضعيات الانتظار (idleRotation) والاستقرار المسموحة
+  //  full: أبعد نقطة ممكن يوصلها وهو يدور (رأس على أي اتجاه، مع تكبير المنظور)
+  // restSpin: أقصى دوران حول الشاشة بعد الوقوف بالدرجات (يحدده dice.js مع الرمية)
+  // dice.js يوزّع النرد بهذي القيم. نجرّب الوضعيات بخطوات صغيرة (أطراف المدى منها)، ونحفظ النتيجة
+  const extentCache = new Map();
+  function restingExtent(sides, radius, restSpin) {
+    const key = `${sides}|${radius}|${restSpin}`;
+    if (extentCache.has(key)) return extentCache.get(key);
+    const shape = SHAPES[sides];
+    const steps = (min, max, n) => Array.from({ length: n + 1 }, (_, i) => min + ((max - min) * i) / n);
+    let x = 0;
+    let y = 0;
+    const measure = (q) => {
+      const m = qToMatrix(q);
+      for (const vertex of shape.vertices) {
+        const p = mApply(m, vertex);
+        const s = PERSPECTIVE / (PERSPECTIVE - p[2] * radius);
+        x = Math.max(x, Math.abs(p[0]) * radius * s);
+        y = Math.max(y, Math.abs(p[1]) * radius * s);
+      }
+    };
+    const quarters = sides === 6 ? [0, 1, 2, 3] : [0];
+    for (const face of shape.faces) {
+      for (const spin of steps(-restSpin, restSpin, 8))
+        for (const quarter of quarters)
+          measure(qMul(qAxis(Z_AXIS, (quarter * 90 + spin) * DEG), restRotation(shape, face.label)));
+      for (const tilt of steps(...IDLE_TILT, 4))
+        for (const direction of steps(-IDLE_TILT_DIRECTION, IDLE_TILT_DIRECTION, 12))
+          for (const flip of [0, 180])
+            for (const spin of steps(-IDLE_SPIN, IDLE_SPIN, 4))
+              for (const quarter of quarters) measure(idleRotation(shape, face.label, tilt, direction + flip, spin, quarter));
+    }
+    // وهو يدور: أبعد نقطة على كرة نصف قطرها radius بعد المنظور
+    let full = radius;
+    for (let i = 0; i <= 90; i++) {
+      const a = i * DEG;
+      full = Math.max(full, (radius * Math.sin(a) * PERSPECTIVE) / (PERSPECTIVE - radius * Math.cos(a)));
+    }
+    const extent = { x, y, full };
+    extentCache.set(key, extent);
+    return extent;
+  }
+
   // نعيد رسم كل النرد (الواقف والمتحرك) بنفس مسار الرسم بالضبط
   function redrawAll() {
     spriteCache.clear(); // صور الأرقام القديمة ممكن تكون بخط ثاني أو مقاس قديم
@@ -759,5 +820,6 @@
   window.Dice3D = {
     SHAPES,
     create: (sides, box, parent) => new PolyDie(sides, box, parent),
+    restingExtent,
   };
 })();
