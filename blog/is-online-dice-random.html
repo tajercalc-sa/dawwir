@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>/* الرابط النظيف: /tools/dice.html تصير /tools/dice في شريط العنوان بدون إعادة تحميل */(function(l){var p=l.pathname;if(/\.html$/.test(p)&&!/\/404\.html$/.test(p))history.replaceState(null,"",p.replace(/(^|\/)index\.html$/,"$1").replace(/\.html$/,"")+l.search+l.hash)})(location)</script>
+  <title>هل النرد الإلكتروني عشوائي فعلاً؟ كيف يشتغل | دوّر</title>
+  <meta name="description" content="شرح بسيط لطريقة عمل النرد الإلكتروني في دوّر: النتيجة تتحدد بـ crypto.getRandomValues قبل الحركة، وكيف نتجنب الانحياز، وهل النرد الحقيقي أعدل.">
+  <link rel="canonical" href="https://dawwir.net/blog/is-online-dice-random">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="دوّر">
+  <meta property="og:locale" content="ar_SA">
+  <meta property="og:title" content="هل النرد الإلكتروني عشوائي فعلاً؟ كيف يشتغل | دوّر">
+  <meta property="og:description" content="شرح بسيط لطريقة عمل النرد الإلكتروني في دوّر: النتيجة تتحدد بـ crypto.getRandomValues قبل الحركة، وكيف نتجنب الانحياز، وهل النرد الحقيقي أعدل.">
+  <meta property="og:url" content="https://dawwir.net/blog/is-online-dice-random">
+  <meta property="og:image" content="https://dawwir.net/assets/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="دوّر — أدوات اختيار عشوائي بالعربي">
+  <meta property="article:published_time" content="2026-10-06">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="theme-color" content="#0e7c66">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="../favicon.ico" sizes="32x32">
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+  <link rel="preload" href="../assets/fonts/cairo-arabic.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <script src="../assets/js/common.js" defer></script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "هل النرد الإلكتروني عشوائي فعلاً؟ كيف يشتغل",
+  "description": "شرح بسيط لطريقة عمل النرد الإلكتروني في دوّر: النتيجة تتحدد بـ crypto.getRandomValues قبل الحركة، وكيف نتجنب الانحياز، وهل النرد الحقيقي أعدل.",
+  "url": "https://dawwir.net/blog/is-online-dice-random",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://dawwir.net/blog/is-online-dice-random"
+  },
+  "inLanguage": "ar",
+  "datePublished": "2026-10-06",
+  "dateModified": "2026-10-06",
+  "image": "https://dawwir.net/assets/og-image.png",
+  "author": {
+    "@type": "Organization",
+    "name": "دوّر",
+    "url": "https://dawwir.net/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "دوّر",
+    "url": "https://dawwir.net/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://dawwir.net/assets/apple-touch-icon.png"
+    }
+  }
+}
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <a class="logo" href="/">دوّر</a>
+      <button type="button" class="nav-toggle" aria-expanded="false" aria-controls="site-nav">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false">
+          <path class="icon-open" d="M4 6h16M4 12h16M4 18h16"/>
+          <path class="icon-close" d="M6 6l12 12M18 6L6 18"/>
+        </svg>
+        <span>الأدوات</span>
+      </button>
+      <nav class="site-nav" id="site-nav" aria-label="الأدوات">
+        <ul>
+          <li><a href="/">عجلة الأسماء</a></li>
+          <li><a href="/tools/ready-wheels">عجلات جاهزة</a></li>
+          <li><a href="/tools/giveaway">اختيار فائز</a></li>
+          <li><a href="/tools/teams">تقسيم فرق</a></li>
+          <li><a href="/tools/dice">رمي النرد</a></li>
+          <li><a href="/tools/coin">رمي عملة</a></li>
+          <li><a href="/tools/random-number">رقم عشوائي</a></li>
+          <li><a href="/blog" aria-current="page">المدونة</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+      <article class="content static-page post">
+        <h1>هل النرد الإلكتروني عشوائي فعلاً؟ كيف يشتغل</h1>
+        <p class="post-meta">فريق دوّر · <time datetime="2026-10-06">6 أكتوبر 2026</time></p>
+
+        <p>لما ترمي نرد حقيقي، تشوف النرد يطير ويتدحرج ويوقف، فتصدق إن النتيجة صدفة. لكن لما ترمي نرد على الشاشة، السؤال طبيعي: هل الجهاز «يختار» الرقم فعلاً بعشوائية؟ وهل الحركة اللي أشوفها هي اللي تحدد النتيجة؟</p>
+        <p>في هذا المقال نشرح بالضبط وش يصير داخل <a href="/tools/dice">أداة رمي النرد</a> في دوّر من لحظة الضغط على الزر لين يوقف النرد. بدون مبالغة، وبدون مصطلحات أكثر من اللازم.</p>
+
+        <h2>الجواب المختصر</h2>
+        <p>النتيجة تتحدد <strong>قبل</strong> ما تبدأ الحركة، بمولّد أرقام عشوائية آمن موجود في المتصفح اسمه <code>crypto.getRandomValues</code>. بعدها الأداة تحرّك النرد بحيث يوقف على الوجه اللي انختار. يعني الدوران والقفز اللي تشوفه للعرض بس، وما يأثر على الرقم أبداً.</p>
+
+        <h2>وش يصير لما تضغط «ارمِ النرد»؟</h2>
+        <p>خلنا نمشي على الخطوات بالترتيب:</p>
+        <ol>
+        <li><strong>اختيار الأرقام:</strong> الأداة تطلب رقم عشوائي لكل نرد، بين 1 وعدد الأوجه. مثلاً لو اخترت 3 نرد من نوع d6، تطلع ثلاث أرقام كل واحد بين 1 و6. وكل نرد مستقل عن الثاني.</li>
+        <li><strong>تجهيز الحركة:</strong> الأداة تختار لكل نرد عدد لفّات عشوائي وميلان بسيط، عشان ما يتحرك كل نرد بنفس الشكل في كل رمية.</li>
+        <li><strong>الحركة:</strong> النرد يلف ويقفز حوالي ثانية وشوي، ويتباطأ تدريجياً لين يوقف والوجه الفائز قدّامك. ولو عندك أكثر من نرد، كل واحد يبدأ بعد اللي قبله بجزء صغير من الثانية.</li>
+        <li><strong>النتيجة:</strong> لما يوقف آخر نرد، يظهر المجموع وقيمة كل نرد.</li>
+        </ol>
+        <p>لاحظ إن الخطوة الأولى هي اللي تقرر كل شي. الخطوات اللي بعدها مجرد «إخراج» للنتيجة.</p>
+
+        <h2>طيب، ليش ما تخلي الحركة تقرر النتيجة؟</h2>
+        <p>لأن الحركة على الشاشة مو فيزياء حقيقية. لو حاولنا نحسب وين بيوقف النرد من سرعته وزاويته، بيصير فيه احتمال إن أوجه معيّنة تطلع أكثر من غيرها بسبب تفاصيل الرسم أو الحساب. لكن لما الرقم يتحدد أول بطريقة عادلة رياضياً، نضمن إن كل وجه له نفس الفرصة، والحركة تتبع النتيجة مو العكس.</p>
+        <p>ولهذا السبب بعد، لو كان جهازك مفعّل عليه خيار «تقليل الحركة»، النتيجة تظهر مباشرة بدون دوران، وتنحسب بنفس الطريقة بالضبط. الحركة تنشال، والعدالة ما تتغير.</p>
+
+        <h2>وش يعني «مولّد أرقام آمن»؟</h2>
+        <p>الكمبيوتر بطبيعته يمشي على تعليمات محددة، فما يقدر «يخترع» صدفة من لا شي. عشان كذا فيه نوعين من مولّدات الأرقام في المتصفح:</p>
+        <ul>
+        <li><code>Math.random</code>: سريع ومناسب للأشياء الشكلية، لكنه ما هو مصمم للمواقف اللي تحتاج نتيجة يصعب توقعها.</li>
+        <li><code>crypto.getRandomValues</code>: مصمم للأمان، ويعتمد على مصادر عشوائية يوفرها نظام التشغيل. نفس النوع من المولّدات يُستخدم في أشياء حساسة مثل توليد مفاتيح التشفير، فنتيجته عملياً ما تنتوقع.</li>
+        </ul>
+        <p>أدوات دوّر كلها، من النرد للعجلة لسحب الفائز، تستخدم النوع الثاني لأي شي يحدد نتيجة.</p>
+
+        <h2>تفصيلة صغيرة لكنها مهمة: الانحياز</h2>
+        <p>المولّد الآمن يعطي رقم كبير جداً، والأداة لازم تحوّله لرقم بين 1 و6 مثلاً. الطريقة السهلة هي باقي القسمة، لكن فيها مشكلة خفية: لو مدى الأرقام الكبيرة ما ينقسم بالتساوي على 6، بعض النتائج تاخذ فرصة أكبر بشوي من غيرها.</p>
+        <p>الأداة تتجنب هذا بطريقة اسمها «الرفض»: لو طلع رقم من المنطقة الأخيرة اللي تسبب الانحياز، ترفضه وتطلب رقم جديد. النتيجة إن كل وجه له نفس الفرصة بالضبط، مو تقريباً.</p>
+
+        <h2>هل النرد الحقيقي أعدل؟</h2>
+        <p>النرد الحقيقي عادل لما يكون مصنوع بدقة ومتوازن، والرمية نفسها قوية بما يكفي. لكنه ممكن يتأثر بأشياء مثل عيوب التصنيع، أو طريقة الرمي، أو سطح الطاولة. النرد الإلكتروني اللي يعتمد على مولّد آمن ما يتأثر بأي من هذي الأشياء، لأن النتيجة ما لها علاقة بالشكل أو الحركة.</p>
+        <p>بس عشان نكون واقعيين: الفرق في الألعاب العائلية بسيط، والنرد الحقيقي ممتع بطريقته. ميزة النرد الإلكتروني الأساسية إنه موجود دايم في جيبك، ويحسب المجموع عنك.</p>
+
+        <h2>عن الأنواع الثانية: d4 وd8 وd20</h2>
+        <p>الأداة فيها ست أنواع: d4 وd6 وd8 وd10 وd12 وd20. الحرف d اختصار لكلمة dice، والرقم بعده هو عدد الأوجه. وكلها تشتغل بنفس الطريقة: رقم عشوائي بين 1 وعدد الأوجه، ثم حركة توصل لهذا الوجه.</p>
+        <p>والأشكال مرسومة على شكلها الحقيقي، والأرقام موزّعة مثل أغلب النرد الحقيقي: كل وجهين متقابلين مجموعهم يساوي عدد الأوجه زائد واحد. مثلاً في d6 الوجه 1 مقابل 6، وفي d20 الوجه 1 مقابل 20. ما عدا d4 لأنه هرم وما فيه أوجه متقابلة.</p>
+
+        <h2>جرّبها بنفسك</h2>
+        <p>لو تبغى تتأكد، ارمِ نرد واحد عدد كبير من المرات وسجّل النتائج. بتلاحظ إن كل وجه يطلع تقريباً بنفس عدد المرات كل ما زاد عدد الرميات. ولا تستغرب لو طلع نفس الرقم مرتين أو ثلاث ورا بعض، لأن هذا طبيعي في العشوائية الحقيقية، وكل رمية مستقلة عن اللي قبلها.</p>
+        <p>ولو رميت نردين، بتلاحظ إن المجموع 7 يطلع أكثر من غيره. السبب رياضي بحت: فيه ست طرق توصل للمجموع 7 (1 و6، 2 و5، 3 و4، وعكسها)، بينما المجموع 2 له طريقة وحدة بس (1 و1). يعني 7 له 6 فرص من أصل 36 تركيبة.</p>
+
+        <h2>الخلاصة</h2>
+        <p>النرد الإلكتروني يكون عشوائي فعلاً لما يعتمد على مولّد آمن، ولما يتجنب الانحياز في تحويل الأرقام، ولما تكون الحركة نتيجة للرقم مو سبب له. وهذي الثلاث هي بالضبط طريقة عمل أداة النرد في دوّر.</p>
+
+        <aside class="try-tool" aria-labelledby="try-tool-title">
+          <h2 id="try-tool-title">جرّب الأداة</h2>
+          <p>من 1 إلى 6 نرد، بست أنواع من d4 لين d20، والمجموع يطلع مباشرة.</p>
+          <a class="btn" href="/tools/dice">افتح أداة رمي النرد</a>
+        </aside>
+
+        <h2>مقالات ذات صلة</h2>
+        <ul class="wheel-links">
+          <li><a class="wheel-link" href="/blog/fair-giveaway-winner"><span class="icon" aria-hidden="true">🏆</span><span><strong>كيف تختار فائز السحب على إنستغرام بشكل عادل وشفاف</strong><small>تسع خطوات من كتابة الشروط لين نشر النتيجة، عشان يثق فيك المتابعين.</small></span></a></li>
+          <li><a class="wheel-link" href="/blog/where-to-eat-today"><span class="icon" aria-hidden="true">🍛</span><span><strong>وين نتغدى اليوم؟ طرق تحسم القرار بدون خلاف</strong><small>أسئلة وأجوبة لكل موقف: من «أي شي» لين القروب اللي ما يتفق.</small></span></a></li>
+        </ul>
+        <p><a class="more-link" href="/blog">كل مقالات المدونة ←</a></p>
+      </article>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <ul>
+        <li><a href="/blog">المدونة</a></li>
+        <li><a href="/privacy">سياسة الخصوصية</a></li>
+        <li><a href="/about">من نحن</a></li>
+        <li><a href="/contact">اتصل بنا</a></li>
+      </ul>
+      <p>© <span data-year>2026</span> دوّر — dawwir.net</p>
+    </div>
+  </footer>
+</body>
+</html>
