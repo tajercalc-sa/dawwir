@@ -114,9 +114,18 @@
     }
   }
 
+  // رابط الصفحة بالصيغة النظيفة، أياً كانت الصيغة اللي فتح فيها الزائر:
+  // /tools/wheels/lunch.html أو /tools/wheels/lunch/ تصير /tools/wheels/lunch، و /index.html تصير /
+  function cleanPageUrl() {
+    const path = location.pathname
+      .replace(/(^|\/)index\.html$/, "$1")
+      .replace(/\.html$/, "")
+      .replace(/(.)\/+$/, "$1");
+    return location.origin + path;
+  }
+
   function buildShareUrl() {
-    const base = location.href.split(/[?#]/)[0];
-    return base + "?l=" + encodeList(items);
+    return cleanPageUrl() + "?l=" + encodeList(items);
   }
 
   /* ---------- 4) الصوت (Web Audio API بدون ملفات) ---------- */
@@ -528,7 +537,7 @@
   // شارك النتيجة: نص قصير جاهز للواتساب، فيه السؤال والنتيجة ورابط الصفحة في الآخر
   document.getElementById("share-result-btn").addEventListener("click", async () => {
     const canonical = document.querySelector('link[rel="canonical"]');
-    const pageUrl = canonical ? canonical.href : location.href.split(/[?#]/)[0];
+    const pageUrl = canonical ? canonical.href : cleanPageUrl();
     const text = `🎡 ${SHARE_TITLE}\nالعجلة اختارت: *${resultName.textContent}*\n\nدوّرها أنت: ${pageUrl}`;
     // على الجوال تطلع قائمة المشاركة (واتساب وغيره)، وعلى الكمبيوتر ننسخ النص
     const isTouch = window.matchMedia("(pointer: coarse)").matches;
