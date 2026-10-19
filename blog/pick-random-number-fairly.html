@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>/* الرابط النظيف: /tools/dice.html تصير /tools/dice في شريط العنوان بدون إعادة تحميل */(function(l){var p=l.pathname;if(/\.html$/.test(p)&&!/\/404\.html$/.test(p))history.replaceState(null,"",p.replace(/(^|\/)index\.html$/,"$1").replace(/\.html$/,"")+l.search+l.hash)})(location)</script>
+  <title>كيف تختار رقم عشوائي بدون ما تتحيز؟ | دوّر</title>
+  <meta name="description" content="ليش الرقم اللي يجي في بالك مو عشوائي، ووش يعني اختيار عادل لرقم بين حدّين، وكيف تختار رقم أو أكثر بدون تكرار ولا انحياز.">
+  <link rel="canonical" href="https://dawwir.net/blog/pick-random-number-fairly">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="دوّر">
+  <meta property="og:locale" content="ar_SA">
+  <meta property="og:title" content="كيف تختار رقم عشوائي بدون ما تتحيز؟ | دوّر">
+  <meta property="og:description" content="ليش الرقم اللي يجي في بالك مو عشوائي، ووش يعني اختيار عادل لرقم بين حدّين، وكيف تختار رقم أو أكثر بدون تكرار ولا انحياز.">
+  <meta property="og:url" content="https://dawwir.net/blog/pick-random-number-fairly">
+  <meta property="og:image" content="https://dawwir.net/assets/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="دوّر — أدوات اختيار عشوائي بالعربي">
+  <meta property="article:published_time" content="2026-10-19">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="theme-color" content="#0e7c66">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="../favicon.ico" sizes="32x32">
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+  <link rel="preload" href="../assets/fonts/cairo-arabic.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <script src="../assets/js/common.js" defer></script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "كيف تختار رقم عشوائي بدون ما تتحيز؟",
+  "description": "ليش الرقم اللي يجي في بالك مو عشوائي، ووش يعني اختيار عادل لرقم بين حدّين، وكيف تختار رقم أو أكثر بدون تكرار ولا انحياز.",
+  "url": "https://dawwir.net/blog/pick-random-number-fairly",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://dawwir.net/blog/pick-random-number-fairly"
+  },
+  "inLanguage": "ar",
+  "datePublished": "2026-10-19",
+  "dateModified": "2026-10-19",
+  "image": "https://dawwir.net/assets/og-image.png",
+  "author": {
+    "@type": "Organization",
+    "name": "دوّر",
+    "url": "https://dawwir.net/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "دوّر",
+    "url": "https://dawwir.net/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://dawwir.net/assets/apple-touch-icon.png"
+    }
+  }
+}
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <a class="logo" href="/">دوّر</a>
+      <button type="button" class="nav-toggle" aria-expanded="false" aria-controls="site-nav">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false">
+          <path class="icon-open" d="M4 6h16M4 12h16M4 18h16"/>
+          <path class="icon-close" d="M6 6l12 12M18 6L6 18"/>
+        </svg>
+        <span>الأدوات</span>
+      </button>
+      <nav class="site-nav" id="site-nav" aria-label="الأدوات">
+        <ul>
+          <li><a href="/">عجلة الأسماء</a></li>
+          <li><a href="/tools/ready-wheels">عجلات جاهزة</a></li>
+          <li><a href="/tools/giveaway">اختيار فائز</a></li>
+          <li><a href="/tools/teams">تقسيم فرق</a></li>
+          <li><a href="/tools/dice">رمي النرد</a></li>
+          <li><a href="/tools/coin">رمي عملة</a></li>
+          <li><a href="/tools/random-number">رقم عشوائي</a></li>
+          <li><a href="/blog/" aria-current="page">المدونة</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+      <article class="content static-page post">
+        <h1>كيف تختار رقم عشوائي بدون ما تتحيز؟</h1>
+        <p class="post-meta">فريق دوّر · <time datetime="2026-10-19">19 أكتوبر 2026</time></p>
+
+        <p>لو طلبت من أحد «قول رقم من 1 إلى 10»، بتحسب إنه اختار بعشوائية. لكن الرقم اللي يجي في بالنا نادراً يكون صدفة. في هذا المقال نشرح الفكرة ببساطة: وش يعني رقم عشوائي «عادل»، وليش عقولنا ما تنفع لهذي المهمة، وكيف تختار رقم بطريقة ما يقدر أحد يشكك فيها.</p>
+
+        <h2>وش يعني رقم عشوائي «عادل»؟</h2>
+        <p>الفكرة كلها في جملة وحدة: <strong>كل رقم في النطاق له نفس الفرصة بالضبط</strong>. لو النطاق من 1 إلى 10، فكل رقم له فرصة وحدة من عشر، لا أكثر ولا أقل. والحدّين نفسهم داخلين في الاختيار، فالـ 1 والـ 10 لهم نفس فرصة الـ 5.</p>
+        <p>وفيه شرط ثاني أقل وضوحاً: <strong>ما تقدر تتوقع النتيجة</strong>. حتى لو عرفت كل الأرقام اللي طلعت قبل، ما يساعدك هذا تعرف الرقم الجاي.</p>
+
+        <h2>ليش الرقم اللي في بالك مو عشوائي؟</h2>
+        <p>العقل البشري ممتاز في اكتشاف الأنماط، لكنه ضعيف في صنع الصدفة. لما نحاول نختار رقم «عشوائي»:</p>
+        <ul>
+        <li>يميل كثير من الناس لتجنب الأطراف، فأول رقم وآخر رقم في النطاق ينقال أقل مما يستاهلون.</li>
+        <li>غالباً نحس إن بعض الأرقام «شكلها عشوائي» أكثر من غيرها، فنرجع لها بدون ما ننتبه.</li>
+        <li>لو طلبنا أكثر من رقم، نتجنب التكرار ونحاول نوزّعها بالتساوي، مع إن الصدفة الحقيقية تكرر أحياناً.</li>
+        <li>لو فيه شي يهمنا في النتيجة، مثل رقم تذكرة صاحبنا في السحب، ممكن نتأثر بدون قصد.</li>
+        </ul>
+        <p>هذا مو عيب في أحد. هو بس سبب كافي إنك ما تعتمد على «قول رقم» في أي موقف فيه جائزة أو دور أو خلاف.</p>
+
+        <h2>طيب، وأوراق مطوية في كيس؟</h2>
+        <p>الأوراق المطوية طريقة قديمة وممتازة لو انعملت صح: نفس الحجم، ونفس الطيّة، وخلط زين قبل كل سحبة. لكن مع النطاقات الكبيرة تصير متعبة؛ تخيّل تكتب 500 ورقة. ولو الخلط كان مستعجل، ممكن الأوراق اللي انحطت آخر شي تبقى فوق وتنسحب أسرع. هنا تفيدك الأداة.</p>
+
+        <h2>كيف تختار الأداة الرقم؟</h2>
+        <p>في <a href="/tools/random-number">أداة الرقم العشوائي</a> تكتب أصغر رقم وأكبر رقم وتضغط الزر. وخلف الكواليس يصير التالي:</p>
+        <p>الأداة تطلب رقم من مولّد الأرقام الآمن في المتصفح (<code>crypto.getRandomValues</code>)، وهو نفس النوع المستخدم في الأشياء الحساسة مثل التشفير. هذا المولّد يعطي رقم كبير جداً، والأداة تحوّله لرقم داخل نطاقك.</p>
+        <p>وهنا تفصيلة مهمة: التحويل بالطريقة السهلة (باقي القسمة) ممكن يعطي بعض الأرقام فرصة أكبر بشوي، لو المدى الكبير ما ينقسم بالتساوي على حجم نطاقك. الأداة تتجنب هذا: لو طلع رقم من المنطقة اللي تسبب الانحياز، ترميه وتطلب رقم جديد. النتيجة إن كل رقم له نفس الفرصة بالضبط، مو تقريباً.</p>
+        <p>ولما تطلب رقم واحد، تشوف أرقام تتقلب بسرعة أقل من نص ثانية قبل ما تثبت النتيجة. هذا للعرض بس، لأن الرقم النهائي محسوب قبل ما يبدأ التقليب. ولو جهازك مفعّل عليه خيار «تقليل الحركة»، النتيجة تظهر مباشرة.</p>
+
+        <h2>رقم واحد ولا أكثر؟ ومع تكرار ولا بدون؟</h2>
+        <p>تقدر تطلب لين 1000 رقم في المرة. ولما تطلب أكثر من رقم، يظهر خيار «بدون تكرار»:</p>
+        <ul>
+        <li><strong>بدون تكرار:</strong> مثل سحب أوراق مرقّمة من كيس بدون ما ترجعها، فكل رقم يطلع مرة وحدة بس. ينفع لترتيب أدوار، أو لسحب أكثر من فائز من أرقام تذاكر.</li>
+        <li><strong>مع التكرار:</strong> كل رقم ينسحب لحاله، فممكن نفس الرقم يطلع مرتين. ينفع لما كل سحبة مستقلة عن غيرها، مثل لو تبغى تحاكي رمي نرد عدة مرات.</li>
+        </ul>
+        <p>ولو طلبت أرقام بدون تكرار أكثر من اللي في النطاق، مثل 20 رقم من 1 إلى 10، الأداة توقفك برسالة توضح إن هذا مستحيل، بدل ما تعطيك نتيجة ناقصة.</p>
+
+        <h2>حدود لازم تعرفها</h2>
+        <ul>
+        <li>الأرقام لازم تكون صحيحة، بدون كسور.</li>
+        <li>الحدود تمشي من سالب مليار إلى مليار، فتقدر تستخدم الأرقام السالبة والصفر.</li>
+        <li>لو كتبت الرقم الأكبر في خانة «من» بالغلط، الأداة تعكس الحدّين بنفسها.</li>
+        <li>فيه نطاقات جاهزة بضغطة وحدة: من 1 إلى 10، ومن 1 إلى 100، ومن 1 إلى 1000.</li>
+        </ul>
+
+        <h2>عادات تخلي اختيارك فوق الشك</h2>
+        <p>العدالة مو بس في المولّد، لكن كمان في طريقة استخدامه:</p>
+        <ul>
+        <li><strong>حدد النطاق قبل ما تختار.</strong> لو عندك 37 تذكرة، النطاق من 1 إلى 37، ولا تغيّره بعد ما تشوف النتيجة.</li>
+        <li><strong>اتفق على المعنى قبل الضغط.</strong> مثلاً: «أول رقم هو الفائز، والثاني احتياطي».</li>
+        <li><strong>لا تعيد لأن النتيجة ما عجبتك.</strong> الإعادة بعد النتيجة تلغي فكرة العشوائية كلها. لو تحتاج سبب للإعادة، حدّدوه من البداية، مثل لو طلع رقم تذكرة صاحبها مو موجود.</li>
+        <li><strong>خلّ الناس يشوفون.</strong> اختر الرقم قدّامهم، أو صوّر الشاشة، أو اضغط «نسخ النتيجة» وأرسلها لهم.</li>
+        </ul>
+
+        <h2>لا تستغرب من النتائج «الغريبة»</h2>
+        <p>لو اخترت رقم من 1 إلى 10 مرتين وطلع نفس الرقم، هذا مو خلل. كل اختيار مستقل عن اللي قبله، والأداة ما تتذكر وش طلع. ولو طلبت عشر أرقام مع التكرار ولقيت فيها رقمين متشابهين، هذا شي متوقع. النتيجة اللي تبان «مرتّبة» زيادة عن اللزوم هي اللي تثير الشك عادة، مو العكس.</p>
+
+        <h2>الخلاصة</h2>
+        <p>الاختيار العادل للرقم يحتاج ثلاث أشياء: مولّد ما تقدر تتوقعه، وتحويل ما فيه انحياز، وقواعد متفق عليها قبل الضغط. أول اثنين تتكفل فيهم الأداة، والثالث عليك.</p>
+
+        <aside class="try-tool" aria-labelledby="try-tool-title">
+          <h2 id="try-tool-title">جرّب الأداة</h2>
+          <p>من رقم واحد لين 1000 رقم، بين سالب مليار ومليار، مع تكرار أو بدونه.</p>
+          <a class="btn" href="/tools/random-number">افتح أداة الرقم العشوائي</a>
+        </aside>
+
+        <h2>مقالات ذات صلة</h2>
+        <ul class="wheel-links">
+          <li><a class="wheel-link" href="/blog/is-online-dice-random"><span class="icon" aria-hidden="true">🎲</span><span><strong>هل النرد الإلكتروني عشوائي فعلاً؟ كيف يشتغل</strong><small>وش يصير بالضبط لما تضغط «ارمِ النرد»، وليش الحركة للعرض بس.</small></span></a></li>
+          <li><a class="wheel-link" href="/blog/fair-giveaway-winner"><span class="icon" aria-hidden="true">🏆</span><span><strong>كيف تختار فائز السحب على إنستغرام بشكل عادل وشفاف</strong><small>تسع خطوات من كتابة الشروط لين نشر النتيجة، عشان يثق فيك المتابعين.</small></span></a></li>
+        </ul>
+        <p><a class="more-link" href="/blog/">كل مقالات المدونة ←</a></p>
+      </article>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <ul>
+        <li><a href="/blog/">المدونة</a></li>
+        <li><a href="/privacy">سياسة الخصوصية</a></li>
+        <li><a href="/about">من نحن</a></li>
+        <li><a href="/contact">اتصل بنا</a></li>
+      </ul>
+      <p>© <span data-year>2026</span> دوّر — dawwir.net</p>
+    </div>
+  </footer>
+</body>
+</html>
