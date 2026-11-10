@@ -28,6 +28,18 @@
     "#264653", "#e9c46a", "#8e5ba8", "#4caf8e",
   ];
 
+  // لو نص القطعة اسم لون، نلوّنها باللون نفسه (مو من ألوان الموقع)
+  const NAMED_COLORS = {
+    "أحمر": "#e02424",
+    "أزرق": "#1e63d6",
+    "أخضر": "#1f9d3a",
+    "أصفر": "#ffd400",
+    "برتقالي": "#ff7a00",
+    "بنفسجي": "#7b2fbe",
+    "وردي": "#ff5fa2",
+    "أسود": "#111111",
+  };
+
   // الخط في العجلة: Cairo للعربي، وخطوط الإيموجي عشان تظهر ملوّنة
   const WHEEL_FONT =
     'Cairo, "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", system-ui, sans-serif';
@@ -200,8 +212,11 @@
     return withDark > withWhite ? "#1c2321" : "#ffffff";
   }
 
-  // لون القطعة رقم i، مع التأكد إن آخر قطعة ما تشبه الأولى (لأنهم جيران)
+  // لون القطعة رقم i: لو نصها اسم لون نستخدمه، وإلا من ألوان الموقع
+  // مع التأكد إن آخر قطعة ما تشبه الأولى (لأنهم جيران)
   function sliceColor(i, n) {
+    const named = NAMED_COLORS[String(items[i] ?? "").trim()];
+    if (named) return named;
     let index = i % SLICE_COLORS.length;
     if (n > 1 && i === n - 1 && index === 0) index = 1;
     return SLICE_COLORS[index];
