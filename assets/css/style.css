@@ -1213,6 +1213,17 @@ textarea {
   list-style: none;
 }
 
+/* الجوال: الروابط الخمسة في صفين متوازنين (3 + 2) بدل ما يبقى رابط لحاله في الصف الثاني.
+   auto بدل max-content: لو كبّر المستخدم الخط، النص ينكسر داخل العمود بدل ما يطلع برّا الشاشة */
+@media (max-width: 479px) {
+  .site-footer ul {
+    display: grid;
+    grid-template-columns: repeat(3, auto);
+    justify-content: start;
+    column-gap: 0.75rem;
+  }
+}
+
 .site-footer a {
   display: inline-flex;
   align-items: center;
